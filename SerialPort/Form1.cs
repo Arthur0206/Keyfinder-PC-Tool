@@ -9,12 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
-
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace SerialPort
 {
     public partial class Form1 : Form
     {
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
         public Form1()
         {
             InitializeComponent();
@@ -30,9 +34,6 @@ namespace SerialPort
 
             // set default Serial Port configuration
             cmbbaudrate.Text = "115200";
-            cmbparity.Text = "None";
-            cmbdatabits.Text = "8";
-            cmbstopbits.Text = "One";
         }
 
         // sport will be null when declared
@@ -68,9 +69,9 @@ namespace SerialPort
                 return;
 
             int baudrate = Convert.ToInt32(cmbbaudrate.Text);
-            Parity parity = (Parity)Enum.Parse(typeof(Parity), cmbparity.Text);
-            int databits = Convert.ToInt32(cmbdatabits.Text);
-            StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), cmbstopbits.Text);
+            Parity parity = (Parity)Enum.Parse(typeof(Parity), "None");
+            int databits = 8;
+            StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
             serialport_connect(port, baudrate, parity, databits, stopbits);
         }
@@ -189,8 +190,8 @@ namespace SerialPort
             Thread.Sleep(100);
         }
 
-        // Start Button
-        private void button2_Click(object sender, EventArgs e)
+        // Start Test Button
+        private void startTestButton_Click(object sender, EventArgs e)
         {
             // make sure sport is already assigned a value by serialport_connect method.
             if (sport == null)
@@ -208,6 +209,20 @@ namespace SerialPort
         private void txtReceive_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        public void StartProc(string exePath)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = exePath;
+            startInfo.CreateNoWindow = true;
+            startInfo.WindowStyle = ProcessWindowStyle.Minimized;
+            Process.Start(startInfo);
+        }
+
+        private void startBurnButton_Click(object sender, EventArgs e)
+        {
+            StartProc("C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
         }
     }
 }
