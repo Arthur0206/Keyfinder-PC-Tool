@@ -1,28 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Windows;
 
 namespace SerialPort
 {
     public partial class Form1 : Form
     {
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
         public Form1()
         {
             InitializeComponent();
-            cmdClose.Enabled = false;
+            disconnectButton.Enabled = false;
+            startBurnButton.Enabled = false;
+            startTestButton.Enabled = false;
+            sendButton.Enabled = false;
+
             foreach (String s in System.IO.Ports.SerialPort.GetPortNames()) 
             {
                 txtPort.Items.Add(s);
@@ -50,8 +46,11 @@ namespace SerialPort
             try
             {
                 sport.Open();
-                cmdClose.Enabled = true;
-                cmdConnect.Enabled = false;
+                disconnectButton.Enabled = true;
+                connectButton.Enabled = false;
+                startBurnButton.Enabled = true;
+                startTestButton.Enabled = true;
+                sendButton.Enabled = true;
                 txtReceive.AppendText("[" + dtn + "] " + "Connected\n");
                 txtReceive.AppendText("\n");
                 sport.DataReceived += new SerialDataReceivedEventHandler(sport_DataReceived);
@@ -60,7 +59,7 @@ namespace SerialPort
         }
 
         // Connect Button
-        private void cmdConnect_Click(object sender, EventArgs e)
+        private void connectButton_Click(object sender, EventArgs e)
         {
             String port = txtPort.Text;
 
@@ -129,7 +128,7 @@ namespace SerialPort
         }
 
         // Send Button
-        private void button1_Click(object sender, EventArgs e)
+        private void sendButton_Click(object sender, EventArgs e)
         {
             // make sure sport is already assigned a value by serialport_connect method.
             if (sport == null || txtDatatoSend.Text.Trim() == "")
@@ -144,7 +143,7 @@ namespace SerialPort
         }
 
         // Disconnect Button
-        private void cmdClose_Click_1(object sender, EventArgs e)
+        private void disconnectButton_Click(object sender, EventArgs e)
         {
             DateTime dt = DateTime.Now;
             String dtn = dt.ToShortTimeString();
@@ -152,8 +151,11 @@ namespace SerialPort
             if (sport.IsOpen) 
             {
                 sport.Close();
-                cmdClose.Enabled = false;
-                cmdConnect.Enabled = true;
+                disconnectButton.Enabled = false;
+                connectButton.Enabled = true;
+                startBurnButton.Enabled = false;
+                startTestButton.Enabled = false;
+                sendButton.Enabled = false;
                 txtReceive.AppendText("[" + dtn + "] " + "Disconnected\n");
                 txtReceive.AppendText("\n");
             }
@@ -222,7 +224,9 @@ namespace SerialPort
 
         private void startBurnButton_Click(object sender, EventArgs e)
         {
+            startBurnButton.Enabled = false;
             StartProc("C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
+            //StartProc("%ProgramFiles%\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
         }
     }
 }

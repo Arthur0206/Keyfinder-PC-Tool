@@ -29,30 +29,30 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.cmdConnect = new System.Windows.Forms.Button();
+            this.connectButton = new System.Windows.Forms.Button();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.cmbbaudrate = new System.Windows.Forms.ComboBox();
             this.sendButton = new System.Windows.Forms.Button();
             this.txtDatatoSend = new System.Windows.Forms.TextBox();
-            this.cmdClose = new System.Windows.Forms.Button();
+            this.disconnectButton = new System.Windows.Forms.Button();
             this.txtPort = new System.Windows.Forms.ComboBox();
             this.txtReceive = new System.Windows.Forms.TextBox();
             this.startTestButton = new System.Windows.Forms.Button();
             this.startBurnButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // cmdConnect
+            // connectButton
             // 
-            this.cmdConnect.Location = new System.Drawing.Point(198, 623);
-            this.cmdConnect.Margin = new System.Windows.Forms.Padding(4);
-            this.cmdConnect.Name = "cmdConnect";
-            this.cmdConnect.Size = new System.Drawing.Size(79, 28);
-            this.cmdConnect.TabIndex = 0;
-            this.cmdConnect.Text = "Connect";
-            this.cmdConnect.UseVisualStyleBackColor = true;
-            this.cmdConnect.Click += new System.EventHandler(this.cmdConnect_Click);
+            this.connectButton.Location = new System.Drawing.Point(198, 623);
+            this.connectButton.Margin = new System.Windows.Forms.Padding(4);
+            this.connectButton.Name = "connectButton";
+            this.connectButton.Size = new System.Drawing.Size(79, 28);
+            this.connectButton.TabIndex = 0;
+            this.connectButton.Text = "Connect";
+            this.connectButton.UseVisualStyleBackColor = true;
+            this.connectButton.Click += new System.EventHandler(this.connectButton_Click);
             // 
             // label1
             // 
@@ -97,7 +97,7 @@
             this.sendButton.TabIndex = 16;
             this.sendButton.Text = "Send";
             this.sendButton.UseVisualStyleBackColor = true;
-            this.sendButton.Click += new System.EventHandler(this.button1_Click);
+            this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
             // 
             // txtDatatoSend
             // 
@@ -107,16 +107,16 @@
             this.txtDatatoSend.Size = new System.Drawing.Size(262, 22);
             this.txtDatatoSend.TabIndex = 17;
             // 
-            // cmdClose
+            // disconnectButton
             // 
-            this.cmdClose.Location = new System.Drawing.Point(285, 623);
-            this.cmdClose.Margin = new System.Windows.Forms.Padding(4);
-            this.cmdClose.Name = "cmdClose";
-            this.cmdClose.Size = new System.Drawing.Size(86, 28);
-            this.cmdClose.TabIndex = 18;
-            this.cmdClose.Text = "Disconnect";
-            this.cmdClose.UseVisualStyleBackColor = true;
-            this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click_1);
+            this.disconnectButton.Location = new System.Drawing.Point(285, 623);
+            this.disconnectButton.Margin = new System.Windows.Forms.Padding(4);
+            this.disconnectButton.Name = "disconnectButton";
+            this.disconnectButton.Size = new System.Drawing.Size(86, 28);
+            this.disconnectButton.TabIndex = 18;
+            this.disconnectButton.Text = "Disconnect";
+            this.disconnectButton.UseVisualStyleBackColor = true;
+            this.disconnectButton.Click += new System.EventHandler(this.disconnectButton_Click);
             // 
             // txtPort
             // 
@@ -172,13 +172,13 @@
             this.Controls.Add(this.startTestButton);
             this.Controls.Add(this.txtReceive);
             this.Controls.Add(this.txtPort);
-            this.Controls.Add(this.cmdClose);
+            this.Controls.Add(this.disconnectButton);
             this.Controls.Add(this.txtDatatoSend);
             this.Controls.Add(this.sendButton);
             this.Controls.Add(this.cmbbaudrate);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.cmdConnect);
+            this.Controls.Add(this.connectButton);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "Sprintron Flash Programmer & Tester";
@@ -189,14 +189,14 @@
 
         #endregion
 
-        private System.Windows.Forms.Button cmdConnect;
+        private System.Windows.Forms.Button connectButton;
         private System.IO.Ports.SerialPort serialPort1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox cmbbaudrate;
         private System.Windows.Forms.Button sendButton;
         private System.Windows.Forms.TextBox txtDatatoSend;
-        private System.Windows.Forms.Button cmdClose;
+        private System.Windows.Forms.Button disconnectButton;
         private System.Windows.Forms.ComboBox txtPort;
         private System.Windows.Forms.TextBox txtReceive;
         private System.Windows.Forms.Button startTestButton;
