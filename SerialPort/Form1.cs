@@ -226,7 +226,7 @@ namespace SerialPort
         {
             startBurnButton.Enabled = false;
             StartProc("C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
-            //StartProc("%ProgramFiles%\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
+            // StartProc("%ProgramFiles%\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
         }
     }
 }
