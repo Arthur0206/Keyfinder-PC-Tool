@@ -195,7 +195,7 @@ namespace SerialPort
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
         {
-            // make sure sport is already assigned a value by serialport_connect method test.
+            // make sure sport is already assigned a value by serialport_connect method.
             if (sport == null)
                 return;
 
