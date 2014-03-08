@@ -37,6 +37,18 @@ namespace SerialPort
         public System.IO.Ports.SerialPort dutPort;
         public System.IO.Ports.SerialPort refPort;
 
+        // 0: didn't receive, 1: received with success, 2: received with error
+        Int16 isDUTReceivedTxTestEvt = 0;
+        Int16 isDUTReceivedRxTestEvt = 0;
+        Int16 isDUTReceivedTestEndEvt = 0;
+
+        Int16 isREFReceivedTxTestEvt = 0;
+        Int16 isREFReceivedRxTestEvt = 0;
+        Int16 isREFReceivedTestEndEvt = 0;
+
+        Int32 DUTreceivedPacketsNum = 0;
+        Int32 REFreceivedPacketsNum = 0;
+
         // called by event handler to check the sender is dutPort or refPort, and return "DUT" or "REF".
         public String getPortNameFromSenderOrPortObject(object sender)
         {
@@ -125,6 +137,62 @@ namespace SerialPort
             this.txtReceive.AppendText(text + Environment.NewLine + Environment.NewLine);
         }
 
+        // Check if we received targeted HCI events, and set flags to inform StartButton thread, so that we know the test result.
+        private void checkReceivedEventAndSetFlags(object receivedPort, byte[] eventBytes)
+        {
+            if (eventBytes.Length < 7 || eventBytes[0] != 0x04 || eventBytes[1] != 0x0e || eventBytes[3] != 0x00)
+            {
+                // not a valid hci event packet. do nothing for now.
+                return;
+            }
+
+            byte length = eventBytes[2];
+            byte status = eventBytes[6];
+
+            // 0: didn't receive, 1: received with success, 2: received with error
+            Int16 flagValue = 1;
+
+            // check for HCI_LE_Transmitter_Test: 0x201e.
+            if (eventBytes[4] == 0x1e && eventBytes[5] == 0x20)
+            {
+                if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
+                    flagValue = 2;
+
+                if (receivedPort == dutPort)
+                    isDUTReceivedTxTestEvt = flagValue;
+                else if (receivedPort == refPort)
+                    isREFReceivedTxTestEvt = flagValue;
+            }
+            // check for HCI_LE_Receiver_Test: 0x201d
+            else if (eventBytes[4] == 0x1d && eventBytes[5] == 0x20)
+            {
+                if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
+                    flagValue = 2;
+
+                if (receivedPort == dutPort)
+                    isDUTReceivedRxTestEvt = flagValue;
+                else if (receivedPort == refPort)
+                    isREFReceivedRxTestEvt = flagValue;
+            }
+            // check for HCI_Test_End: 0x201f
+            else if (eventBytes[4] == 0x1f && eventBytes[5] == 0x20)
+            {
+                if (length != 0x06 || status != 0x00 || eventBytes.Length != 9)
+                    flagValue = 2;
+
+                if (receivedPort == dutPort)
+                {
+                    isDUTReceivedTestEndEvt = flagValue;
+                    DUTreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                }
+                else if (receivedPort == refPort)
+                {
+                    isREFReceivedTestEndEvt = flagValue;
+                    REFreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                }
+            }
+        }
+
         // Event handler that will be called when Serial Port receving data. Will check sender to determine if DUT or REF send this event.
         private void sport_DataReceived(object sender, SerialDataReceivedEventArgs e) 
         {
@@ -143,9 +211,13 @@ namespace SerialPort
             {
                 bytesReceived.Add(Convert.ToByte(sport.ReadByte()));
             }
+            byte[] bytesReceivedArray = bytesReceived.ToArray();
+
+            // check if we received targeted HCI events, and set flags to inform StartButton thread, so that we know the test result.
+            checkReceivedEventAndSetFlags(sender, bytesReceivedArray);
 
             // convert byte list to byte array, then to string.
-            String ReceivedHexStr = BitConverter.ToString(bytesReceived.ToArray());
+            String ReceivedHexStr = BitConverter.ToString(bytesReceivedArray);
             // add "[time] Received" to string
             ReceivedHexStr = "[" + dtn + "] " + portname + " Received" + Environment.NewLine + ReceivedHexStr;
 
@@ -223,16 +295,22 @@ namespace SerialPort
 
         }
 
-        /*
-        // Event handler when 1 sec timer expired. Send out HCI test end command to both DUT and REF.
-        public void oneSecTimerExpired(object sender, System.Timers.ElapsedEventArgs e)
+        private void initEvtReceivedFlags()
         {
-            // HCI_LE_Test_End
-            byte[] HCI_LE_Test_End = { 0x01, 0x1F, 0x20, 0x00 };
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+            isDUTReceivedTxTestEvt = 0;
+            isDUTReceivedRxTestEvt = 0;
+            isDUTReceivedTestEndEvt = 0;
+            isREFReceivedTxTestEvt = 0;
+            isREFReceivedRxTestEvt = 0;
+            isREFReceivedTestEndEvt = 0;
+            DUTreceivedPacketsNum = 0;
+            REFreceivedPacketsNum = 0;
         }
-        */
+
+        private void showTestResult(String result)
+        {
+            this.txtReceive.AppendText(result + Environment.NewLine + Environment.NewLine);
+        }
 
         private void startButtonThreadCallback()
         {
@@ -243,60 +321,73 @@ namespace SerialPort
             // HCI_LE_Test_End
             byte[] HCI_LE_Test_End = { 0x01, 0x1F, 0x20, 0x00 };
 
-            /*
-            // setup 1 sec timer.
-            System.Timers.Timer t = new System.Timers.Timer(1000);
-            t.Elapsed += new System.Timers.ElapsedEventHandler(oneSecTimerExpired);
-            // do not repeat automatically.
-            t.AutoReset = false; 
-            // enable event handler.
-            t.Enabled = true;
-            */
+            bool testresult = true;
 
             ///////////////////////////////////////////////// DUT Tx & REF Rx /////////////////////////////////////////////////////
+
+            initEvtReceivedFlags();
+
             sendHexArray(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", refPort);
             sendHexArray(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", dutPort);
             // sleep for 1 sec
             Thread.Sleep(1000);
             sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
             sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+
+            // sleep for 2 sec to wait for all events.
+            Thread.Sleep(2000);
+
+            if (isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
+            {
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "===================================================");
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "REF Received " + REFreceivedPacketsNum + " Packets");
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "===================================================");
+
+                if (REFreceivedPacketsNum < 1500)
+                    testresult = false;
+            }
+            else
+            {
+                testresult = false;
+            }
+
+            ///////////////////////////////////////////////// REF Tx & DUT Rx /////////////////////////////////////////////////////
+
+            initEvtReceivedFlags();
+
+            sendHexArray(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", dutPort);
+            sendHexArray(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", refPort);
+            // sleep for 1 sec
+            Thread.Sleep(1000);
+            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
+
+            // sleep for 2 sec to wait for all events.
+            Thread.Sleep(2000);
+
+            if (isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
+            {
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "===================================================");
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "DUT Received " + DUTreceivedPacketsNum + " Packets");
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "===================================================");
+
+                if (DUTreceivedPacketsNum < 1500)
+                    testresult = false;
+            }
+            else
+            {
+                testresult = false;
+            }
+
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            if (testresult == true)
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Passed!");
+            else
+                txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Failed!");
 
-
-
-
-
- 
-
-
-
-
-            /*
-            // send a serious of BT commands
-            byte[] GAP_DeviceInit = {0x01, 0x00, 0xFE, 0x26, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 };
-            sendHexArray(GAP_DeviceInit, 42, "GAP_DeviceInit", dutPort);
-            Thread.Sleep(100);
-
-            byte[] GAP_GetParam = { 0x01, 0x31, 0xFE, 0x01, 0x15 };
-            sendHexArray(GAP_GetParam, 5, "GAP_GetParam", dutPort);
-            Thread.Sleep(100);
-
-            GAP_GetParam[4] = 0x16;
-            sendHexArray(GAP_GetParam, 5, "GAP_GetParam", dutPort);
-            Thread.Sleep(100);
-
-            GAP_GetParam[4] = 0x1A;
-            sendHexArray(GAP_GetParam, 5, "GAP_GetParam", dutPort);
-            Thread.Sleep(100);
-
-            GAP_GetParam[4] = 0x19;
-            sendHexArray(GAP_GetParam, 5, "GAP_GetParam", dutPort);
-            Thread.Sleep(100);
-            */
-
+            // initialize all flags
+            initEvtReceivedFlags();
         }
 
         // Start Test Button
