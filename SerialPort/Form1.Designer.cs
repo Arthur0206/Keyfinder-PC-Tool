@@ -37,10 +37,13 @@
             this.sendButton = new System.Windows.Forms.Button();
             this.txtDatatoSend = new System.Windows.Forms.TextBox();
             this.disconnectButton = new System.Windows.Forms.Button();
-            this.txtPort = new System.Windows.Forms.ComboBox();
+            this.DUTPort = new System.Windows.Forms.ComboBox();
             this.txtReceive = new System.Windows.Forms.TextBox();
             this.startTestButton = new System.Windows.Forms.Button();
             this.startBurnButton = new System.Windows.Forms.Button();
+            this.REFPort = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.serialPort2 = new System.IO.Ports.SerialPort(this.components);
             this.SuspendLayout();
             // 
             // connectButton
@@ -57,18 +60,18 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(15, 605);
+            this.label1.Location = new System.Drawing.Point(15, 606);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(70, 17);
+            this.label1.Size = new System.Drawing.Size(71, 17);
             this.label1.TabIndex = 3;
-            this.label1.Text = "Com Port:";
+            this.label1.Text = "DUT Port:";
             this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(104, 605);
+            this.label5.Location = new System.Drawing.Point(104, 606);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(79, 17);
@@ -90,7 +93,7 @@
             // 
             // sendButton
             // 
-            this.sendButton.Location = new System.Drawing.Point(290, 665);
+            this.sendButton.Location = new System.Drawing.Point(290, 671);
             this.sendButton.Margin = new System.Windows.Forms.Padding(4);
             this.sendButton.Name = "sendButton";
             this.sendButton.Size = new System.Drawing.Size(81, 28);
@@ -101,10 +104,10 @@
             // 
             // txtDatatoSend
             // 
-            this.txtDatatoSend.Location = new System.Drawing.Point(15, 668);
+            this.txtDatatoSend.Location = new System.Drawing.Point(107, 674);
             this.txtDatatoSend.Margin = new System.Windows.Forms.Padding(4);
             this.txtDatatoSend.Name = "txtDatatoSend";
-            this.txtDatatoSend.Size = new System.Drawing.Size(262, 22);
+            this.txtDatatoSend.Size = new System.Drawing.Size(170, 22);
             this.txtDatatoSend.TabIndex = 17;
             // 
             // disconnectButton
@@ -118,15 +121,15 @@
             this.disconnectButton.UseVisualStyleBackColor = true;
             this.disconnectButton.Click += new System.EventHandler(this.disconnectButton_Click);
             // 
-            // txtPort
+            // DUTPort
             // 
-            this.txtPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.txtPort.FormattingEnabled = true;
-            this.txtPort.Location = new System.Drawing.Point(15, 625);
-            this.txtPort.Margin = new System.Windows.Forms.Padding(4);
-            this.txtPort.Name = "txtPort";
-            this.txtPort.Size = new System.Drawing.Size(77, 24);
-            this.txtPort.TabIndex = 19;
+            this.DUTPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DUTPort.FormattingEnabled = true;
+            this.DUTPort.Location = new System.Drawing.Point(15, 625);
+            this.DUTPort.Margin = new System.Windows.Forms.Padding(4);
+            this.DUTPort.Name = "DUTPort";
+            this.DUTPort.Size = new System.Drawing.Size(77, 24);
+            this.DUTPort.TabIndex = 19;
             // 
             // txtReceive
             // 
@@ -146,7 +149,7 @@
             this.startTestButton.Location = new System.Drawing.Point(456, 623);
             this.startTestButton.Margin = new System.Windows.Forms.Padding(4);
             this.startTestButton.Name = "startTestButton";
-            this.startTestButton.Size = new System.Drawing.Size(65, 70);
+            this.startTestButton.Size = new System.Drawing.Size(65, 77);
             this.startTestButton.TabIndex = 21;
             this.startTestButton.Text = "Test";
             this.startTestButton.UseVisualStyleBackColor = true;
@@ -157,22 +160,44 @@
             this.startBurnButton.Location = new System.Drawing.Point(381, 623);
             this.startBurnButton.Margin = new System.Windows.Forms.Padding(4);
             this.startBurnButton.Name = "startBurnButton";
-            this.startBurnButton.Size = new System.Drawing.Size(65, 70);
+            this.startBurnButton.Size = new System.Drawing.Size(65, 77);
             this.startBurnButton.TabIndex = 22;
             this.startBurnButton.Text = "Burn";
             this.startBurnButton.UseVisualStyleBackColor = true;
             this.startBurnButton.Click += new System.EventHandler(this.startBurnButton_Click);
+            // 
+            // REFPort
+            // 
+            this.REFPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.REFPort.FormattingEnabled = true;
+            this.REFPort.Location = new System.Drawing.Point(15, 673);
+            this.REFPort.Margin = new System.Windows.Forms.Padding(4);
+            this.REFPort.Name = "REFPort";
+            this.REFPort.Size = new System.Drawing.Size(77, 24);
+            this.REFPort.TabIndex = 24;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(15, 654);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(69, 17);
+            this.label2.TabIndex = 23;
+            this.label2.Text = "REF Port:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(539, 707);
+            this.ClientSize = new System.Drawing.Size(539, 713);
+            this.Controls.Add(this.REFPort);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.startBurnButton);
             this.Controls.Add(this.startTestButton);
             this.Controls.Add(this.txtReceive);
-            this.Controls.Add(this.txtPort);
+            this.Controls.Add(this.DUTPort);
             this.Controls.Add(this.disconnectButton);
             this.Controls.Add(this.txtDatatoSend);
             this.Controls.Add(this.sendButton);
@@ -198,10 +223,13 @@
         private System.Windows.Forms.Button sendButton;
         private System.Windows.Forms.TextBox txtDatatoSend;
         private System.Windows.Forms.Button disconnectButton;
-        private System.Windows.Forms.ComboBox txtPort;
+        private System.Windows.Forms.ComboBox DUTPort;
         private System.Windows.Forms.TextBox txtReceive;
         private System.Windows.Forms.Button startTestButton;
         private System.Windows.Forms.Button startBurnButton;
+        private System.Windows.Forms.ComboBox REFPort;
+        private System.Windows.Forms.Label label2;
+        private System.IO.Ports.SerialPort serialPort2;
     }
 }
 
