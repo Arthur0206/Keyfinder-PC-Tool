@@ -66,7 +66,6 @@
             this.label1.Size = new System.Drawing.Size(71, 17);
             this.label1.TabIndex = 3;
             this.label1.Text = "DUT Port:";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // label5
             // 
@@ -89,7 +88,6 @@
             this.cmbbaudrate.Name = "cmbbaudrate";
             this.cmbbaudrate.Size = new System.Drawing.Size(77, 24);
             this.cmbbaudrate.TabIndex = 15;
-            this.cmbbaudrate.SelectedIndexChanged += new System.EventHandler(this.cmbbaudrate_SelectedIndexChanged);
             // 
             // sendButton
             // 
@@ -142,7 +140,6 @@
             this.txtReceive.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtReceive.Size = new System.Drawing.Size(506, 573);
             this.txtReceive.TabIndex = 20;
-            this.txtReceive.TextChanged += new System.EventHandler(this.txtReceive_TextChanged);
             // 
             // startTestButton
             // 

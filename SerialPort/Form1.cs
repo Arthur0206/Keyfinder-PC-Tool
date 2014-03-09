@@ -290,11 +290,6 @@ namespace SerialPort
             sendButton.Enabled = false;
         }
 
-        private void cmbbaudrate_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void initEvtReceivedFlags()
         {
             isDUTReceivedTxTestEvt = 0;
@@ -399,16 +394,6 @@ namespace SerialPort
 
             System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(startButtonThreadCallback));
             startButtonThread.Start();
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txtReceive_TextChanged(object sender, EventArgs e)
-        {
-
         }
 
         public void StartProc(string exePath)
