@@ -18,6 +18,7 @@ namespace SerialPort
             startBurnButton.Enabled = false;
             startTestButton.Enabled = false;
             sendButton.Enabled = false;
+            groupBox1.Visible = false;
 
             foreach (String s in System.IO.Ports.SerialPort.GetPortNames()) 
             {
@@ -409,6 +410,14 @@ namespace SerialPort
         {
             startBurnButton.Enabled = false;
             StartProc("C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+                groupBox1.Visible = true;
+            else
+                groupBox1.Visible = false;
         }
     }
 }
