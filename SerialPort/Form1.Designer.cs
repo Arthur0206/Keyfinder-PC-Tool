@@ -45,19 +45,23 @@
             this.serialPort2 = new System.IO.Ports.SerialPort(this.components);
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.advancedGroupBox = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
+            this.generalGroupBox = new System.Windows.Forms.GroupBox();
+            this.advancedPanel = new System.Windows.Forms.Panel();
+            this.generalPanel = new System.Windows.Forms.Panel();
+            this.advancedGroupBox.SuspendLayout();
+            this.generalGroupBox.SuspendLayout();
+            this.advancedPanel.SuspendLayout();
+            this.generalPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // connectButton
             // 
-            this.connectButton.Location = new System.Drawing.Point(269, 40);
+            this.connectButton.Location = new System.Drawing.Point(267, 40);
             this.connectButton.Margin = new System.Windows.Forms.Padding(4);
             this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(102, 28);
+            this.connectButton.Size = new System.Drawing.Size(104, 28);
             this.connectButton.TabIndex = 0;
             this.connectButton.Text = "Connect";
             this.connectButton.UseVisualStyleBackColor = true;
@@ -66,7 +70,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 24);
+            this.label1.Location = new System.Drawing.Point(12, 23);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 17);
@@ -76,19 +80,19 @@
             // cmbbaudrate
             // 
             this.cmbbaudrate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbbaudrate.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cmbbaudrate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cmbbaudrate.FormattingEnabled = true;
             this.cmbbaudrate.Items.AddRange(new object[] {
             "9600"});
-            this.cmbbaudrate.Location = new System.Drawing.Point(139, 43);
+            this.cmbbaudrate.Location = new System.Drawing.Point(139, 41);
             this.cmbbaudrate.Margin = new System.Windows.Forms.Padding(4);
             this.cmbbaudrate.Name = "cmbbaudrate";
-            this.cmbbaudrate.Size = new System.Drawing.Size(108, 24);
+            this.cmbbaudrate.Size = new System.Drawing.Size(108, 26);
             this.cmbbaudrate.TabIndex = 15;
             // 
             // sendButton
             // 
-            this.sendButton.Location = new System.Drawing.Point(391, 85);
+            this.sendButton.Location = new System.Drawing.Point(390, 86);
             this.sendButton.Margin = new System.Windows.Forms.Padding(4);
             this.sendButton.Name = "sendButton";
             this.sendButton.Size = new System.Drawing.Size(107, 28);
@@ -99,11 +103,11 @@
             // 
             // txtDatatoSend
             // 
-            this.txtDatatoSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtDatatoSend.Location = new System.Drawing.Point(139, 88);
+            this.txtDatatoSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtDatatoSend.Location = new System.Drawing.Point(139, 89);
             this.txtDatatoSend.Margin = new System.Windows.Forms.Padding(4);
             this.txtDatatoSend.Name = "txtDatatoSend";
-            this.txtDatatoSend.Size = new System.Drawing.Size(232, 23);
+            this.txtDatatoSend.Size = new System.Drawing.Size(232, 24);
             this.txtDatatoSend.TabIndex = 17;
             // 
             // disconnectButton
@@ -120,18 +124,18 @@
             // DUTPort
             // 
             this.DUTPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.DUTPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DUTPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.DUTPort.FormattingEnabled = true;
-            this.DUTPort.Location = new System.Drawing.Point(13, 43);
+            this.DUTPort.Location = new System.Drawing.Point(13, 41);
             this.DUTPort.Margin = new System.Windows.Forms.Padding(4);
             this.DUTPort.Name = "DUTPort";
-            this.DUTPort.Size = new System.Drawing.Size(104, 24);
+            this.DUTPort.Size = new System.Drawing.Size(104, 26);
             this.DUTPort.TabIndex = 19;
             // 
             // txtReceive
             // 
             this.txtReceive.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.txtReceive.Location = new System.Drawing.Point(12, 121);
+            this.txtReceive.Location = new System.Drawing.Point(13, 121);
             this.txtReceive.Margin = new System.Windows.Forms.Padding(4);
             this.txtReceive.Multiline = true;
             this.txtReceive.Name = "txtReceive";
@@ -165,18 +169,18 @@
             // REFPort
             // 
             this.REFPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.REFPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.REFPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.REFPort.FormattingEnabled = true;
-            this.REFPort.Location = new System.Drawing.Point(13, 88);
+            this.REFPort.Location = new System.Drawing.Point(13, 87);
             this.REFPort.Margin = new System.Windows.Forms.Padding(4);
             this.REFPort.Name = "REFPort";
-            this.REFPort.Size = new System.Drawing.Size(104, 24);
+            this.REFPort.Size = new System.Drawing.Size(104, 26);
             this.REFPort.TabIndex = 24;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(14, 71);
+            this.label2.Location = new System.Drawing.Point(14, 69);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 17);
@@ -189,7 +193,7 @@
             this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.richTextBox1.Location = new System.Drawing.Point(13, 199);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(485, 101);
+            this.richTextBox1.Size = new System.Drawing.Size(485, 108);
             this.richTextBox1.TabIndex = 25;
             this.richTextBox1.Text = "";
             // 
@@ -199,74 +203,94 @@
             this.checkBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.checkBox1.Location = new System.Drawing.Point(0, 0);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Padding = new System.Windows.Forms.Padding(10);
-            this.checkBox1.Size = new System.Drawing.Size(512, 41);
+            this.checkBox1.Padding = new System.Windows.Forms.Padding(15, 10, 0, 0);
+            this.checkBox1.Size = new System.Drawing.Size(540, 31);
             this.checkBox1.TabIndex = 26;
             this.checkBox1.Text = "Advanced Panel";
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
-            // groupBox1
+            // advancedGroupBox
             // 
-            this.groupBox1.Controls.Add(this.disconnectButton);
-            this.groupBox1.Controls.Add(this.sendButton);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.REFPort);
-            this.groupBox1.Controls.Add(this.txtReceive);
-            this.groupBox1.Controls.Add(this.connectButton);
-            this.groupBox1.Controls.Add(this.cmbbaudrate);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Controls.Add(this.DUTPort);
-            this.groupBox1.Controls.Add(this.txtDatatoSend);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox1.Location = new System.Drawing.Point(0, 41);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(10);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(512, 376);
-            this.groupBox1.TabIndex = 27;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Advanced Panel";
+            this.advancedGroupBox.Controls.Add(this.disconnectButton);
+            this.advancedGroupBox.Controls.Add(this.sendButton);
+            this.advancedGroupBox.Controls.Add(this.label2);
+            this.advancedGroupBox.Controls.Add(this.REFPort);
+            this.advancedGroupBox.Controls.Add(this.txtReceive);
+            this.advancedGroupBox.Controls.Add(this.connectButton);
+            this.advancedGroupBox.Controls.Add(this.cmbbaudrate);
+            this.advancedGroupBox.Controls.Add(this.label5);
+            this.advancedGroupBox.Controls.Add(this.label1);
+            this.advancedGroupBox.Controls.Add(this.DUTPort);
+            this.advancedGroupBox.Controls.Add(this.txtDatatoSend);
+            this.advancedGroupBox.Location = new System.Drawing.Point(14, 10);
+            this.advancedGroupBox.Margin = new System.Windows.Forms.Padding(10);
+            this.advancedGroupBox.Name = "advancedGroupBox";
+            this.advancedGroupBox.Size = new System.Drawing.Size(512, 370);
+            this.advancedGroupBox.TabIndex = 27;
+            this.advancedGroupBox.TabStop = false;
+            this.advancedGroupBox.Text = "Advanced Panel";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(137, 24);
+            this.label5.Location = new System.Drawing.Point(137, 23);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(79, 17);
             this.label5.TabIndex = 11;
             this.label5.Text = "Baud Rate:";
             // 
-            // groupBox2
+            // generalGroupBox
             // 
-            this.groupBox2.Controls.Add(this.startBurnButton);
-            this.groupBox2.Controls.Add(this.richTextBox1);
-            this.groupBox2.Controls.Add(this.startTestButton);
-            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox2.Location = new System.Drawing.Point(0, 417);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(512, 315);
-            this.groupBox2.TabIndex = 28;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "General Panel";
+            this.generalGroupBox.Controls.Add(this.startBurnButton);
+            this.generalGroupBox.Controls.Add(this.richTextBox1);
+            this.generalGroupBox.Controls.Add(this.startTestButton);
+            this.generalGroupBox.Location = new System.Drawing.Point(14, 7);
+            this.generalGroupBox.Margin = new System.Windows.Forms.Padding(10);
+            this.generalGroupBox.Name = "generalGroupBox";
+            this.generalGroupBox.Size = new System.Drawing.Size(512, 321);
+            this.generalGroupBox.TabIndex = 28;
+            this.generalGroupBox.TabStop = false;
+            this.generalGroupBox.Text = "General Panel";
+            // 
+            // advancedPanel
+            // 
+            this.advancedPanel.Controls.Add(this.advancedGroupBox);
+            this.advancedPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.advancedPanel.Location = new System.Drawing.Point(0, 31);
+            this.advancedPanel.Name = "advancedPanel";
+            this.advancedPanel.Size = new System.Drawing.Size(540, 394);
+            this.advancedPanel.TabIndex = 29;
+            // 
+            // generalPanel
+            // 
+            this.generalPanel.AutoSize = true;
+            this.generalPanel.Controls.Add(this.generalGroupBox);
+            this.generalPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.generalPanel.Location = new System.Drawing.Point(0, 425);
+            this.generalPanel.Name = "generalPanel";
+            this.generalPanel.Size = new System.Drawing.Size(540, 338);
+            this.generalPanel.TabIndex = 26;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(512, 731);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ClientSize = new System.Drawing.Size(540, 765);
+            this.Controls.Add(this.generalPanel);
+            this.Controls.Add(this.advancedPanel);
             this.Controls.Add(this.checkBox1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(558, 0);
             this.Name = "Form1";
             this.Text = "Sprintron Flash Programmer & Tester";
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
+            this.advancedGroupBox.ResumeLayout(false);
+            this.advancedGroupBox.PerformLayout();
+            this.generalGroupBox.ResumeLayout(false);
+            this.advancedPanel.ResumeLayout(false);
+            this.generalPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -290,9 +314,11 @@
         private System.IO.Ports.SerialPort serialPort2;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox advancedGroupBox;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox generalGroupBox;
+        private System.Windows.Forms.Panel advancedPanel;
+        private System.Windows.Forms.Panel generalPanel;
     }
 }
 
