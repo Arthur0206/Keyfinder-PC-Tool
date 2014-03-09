@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Management;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows;
+using System.Text.RegularExpressions;
 
 namespace SerialPort
 {
@@ -15,8 +17,8 @@ namespace SerialPort
         {
             InitializeComponent();
             disconnectButton.Enabled = false;
-            startBurnButton.Enabled = false;
-            startTestButton.Enabled = false;
+            //startBurnButton.Enabled = false;
+            //startTestButton.Enabled = false;
             sendButton.Enabled = false;
             advancedPanel.Visible = false;
 
@@ -90,16 +92,15 @@ namespace SerialPort
             String dtn = dt.ToShortTimeString();
             String portname = getPortNameFromSenderOrPortObject(sportobject);
 
-            sportobject = new System.IO.Ports.SerialPort(
-            com, baudrate, parity, databits, stopbits);
+            sportobject = new System.IO.Ports.SerialPort(com, baudrate, parity, databits, stopbits);
 
             try
             {
                 sportobject.Open();
                 disconnectButton.Enabled = true;
                 connectButton.Enabled = false;
-                startBurnButton.Enabled = true;
-                startTestButton.Enabled = true;
+                //startBurnButton.Enabled = true;
+                //startTestButton.Enabled = true;
                 sendButton.Enabled = true;
                 txtReceive.AppendText("[" + dtn + "] " + portname + " is Connected\n");
                 txtReceive.AppendText("\n");
@@ -286,8 +287,8 @@ namespace SerialPort
 
             disconnectButton.Enabled = false;
             connectButton.Enabled = true;
-            startBurnButton.Enabled = false;
-            startTestButton.Enabled = false;
+            //startBurnButton.Enabled = false;
+            //startTestButton.Enabled = false;
             sendButton.Enabled = false;
         }
 
@@ -386,12 +387,81 @@ namespace SerialPort
             initEvtReceivedFlags();
         }
 
+        private List<string> GetSerialPort()
+        {
+            List<string> comports = new List<string>();
+
+            try
+            {
+                ManagementObjectSearcher searcher =
+                    new ManagementObjectSearcher("root\\CIMV2",
+                    "SELECT * FROM Win32_PnPEntity");
+
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                    if (queryObj["Caption"].ToString().Contains("(COM"))
+                    {
+                        comports.Add(queryObj["Caption"].ToString());
+                    }
+                }
+            }
+            catch (ManagementException e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+            return comports;
+        }
+
+        // Automatically detect com port if not selected. When advanced penal is disabled, this function will be used.
+        private void autoConnectPort()
+        {
+            String dutPortName = "";
+            String refPortName = "";
+            List<string> comports = GetSerialPort();
+
+            foreach (string description in comports)
+            {
+                // match DUT
+                string portNamePattern = "(COM[0-9])";
+                string dutPattern = "CC2540";
+                string refPattern = "CC2540";
+
+                Match portNameMatch = Regex.Match(description, portNamePattern, RegexOptions.IgnoreCase);
+                Match dutMatch = Regex.Match(description, dutPattern, RegexOptions.IgnoreCase);
+                Match refMatch = Regex.Match(description, refPattern, RegexOptions.IgnoreCase);
+
+                if (dutMatch.Success == true && dutPortName.Equals(""))
+                {
+                    //MessageBox.Show("dut comport: " + portNameMatch.Groups[1].ToString());
+                    dutPortName = portNameMatch.Groups[1].ToString();
+                }
+                else if (refMatch.Success == true && refPortName.Equals(""))
+                {
+                    //MessageBox.Show("ref comport: " + portNameMatch.Groups[1].ToString());
+                    refPortName = portNameMatch.Groups[1].ToString();
+                }
+            }
+
+            int baudrate = 115200;
+            Parity parity = (Parity)Enum.Parse(typeof(Parity), "None");
+            int databits = 8;
+            StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
+
+            // connect DUT
+            serialport_connect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort);
+            // connect REF
+            serialport_connect(refPortName, baudrate, parity, databits, stopbits, ref refPort);
+        }
+
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
         {
             // make sure sport is already assigned a value by serialport_connect method.
-            if (dutPort == null)
-                return;
+            if (dutPort == null || refPort == null)
+            {
+                autoConnectPort();
+            }
 
             System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(startButtonThreadCallback));
             startButtonThread.Start();

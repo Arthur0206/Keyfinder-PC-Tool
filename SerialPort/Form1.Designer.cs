@@ -189,8 +189,8 @@
             // 
             // richTextBox1
             // 
-            this.richTextBox1.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBox1.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.richTextBox1.Location = new System.Drawing.Point(13, 199);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.Size = new System.Drawing.Size(485, 108);
@@ -283,6 +283,7 @@
             this.Controls.Add(this.advancedPanel);
             this.Controls.Add(this.checkBox1);
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(558, 0);
             this.Name = "Form1";
             this.Text = "Sprintron Flash Programmer & Tester";
