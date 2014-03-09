@@ -309,6 +309,11 @@ namespace SerialPort
             this.txtReceive.AppendText(result + Environment.NewLine + Environment.NewLine);
         }
 
+        private void showTestResultForRichTextBox(String result)
+        {
+            this.richTextBox1.AppendText(result + Environment.NewLine + Environment.NewLine);
+        }
+
         private void startButtonThreadCallback()
         {
             // LE Transmitter Test: channel 37, byte length 1, pattern 10101010
@@ -331,8 +336,8 @@ namespace SerialPort
             sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
             sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
 
-            // sleep for 2 sec to wait for all events.
-            Thread.Sleep(2000);
+            // sleep for 1 sec to wait for all events.
+            Thread.Sleep(1000);
 
             if (isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
             {
@@ -379,9 +384,15 @@ namespace SerialPort
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (testresult == true)
+            {
                 txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Passed!");
+                richTextBox1.BeginInvoke(new SetTextCallback(showTestResultForRichTextBox), "Test Passed!");
+            }
             else
+            {
                 txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Failed!");
+                richTextBox1.BeginInvoke(new SetTextCallback(showTestResultForRichTextBox), "Test Failed!");
+            }
 
             // initialize all flags
             initEvtReceivedFlags();
