@@ -15,8 +15,12 @@ namespace SerialPort
     public partial class Form1 : Form
     {
         int completeDevice = 0;
-        int statusFont = 20;
-        int completeDeviceFont = 10;
+
+        // Follow arrays are used to hold the property of every line in richBoxText1. 
+        // If want to change property of a line, set the arrays first and then call showMsgToRichTextBox().
+        HorizontalAlignment[] richTextBoxAlignment = { HorizontalAlignment.Center, HorizontalAlignment.Center, HorizontalAlignment.Left };
+        int[] richTextBoxFontSize = { 12, 20, 8 };
+        Color[] richTextBoxColor = { Color.Black, Color.Red, Color.Orange };
 
         // sport will be null when declared
         public System.IO.Ports.SerialPort dutPort;
@@ -35,15 +39,14 @@ namespace SerialPort
         Int32 REFreceivedPacketsNum = 0;
 
         private delegate void SetTextCallback(string text);
-        private delegate void SetRichTextCallback(String text, int line, Color color, HorizontalAlignment align, int size);
+        private delegate void SetRichTextCallback(String text, int line);
 
         public Form1()
         {
             InitializeComponent();
             initAdvancedPanel();
             advancedPanel.Visible = false;
-            richTextBox1.AppendText("\n");
-            showMsgToRichTextBox("Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont);
+            showMsgToRichTextBox("Complete devices: " + completeDevice, 0);
         }
 
         private void initEvtReceivedFlags()
@@ -63,18 +66,31 @@ namespace SerialPort
             this.txtReceive.AppendText(text + Environment.NewLine + Environment.NewLine);
         }
 
-        private void showMsgToRichTextBox(String text, int line, Color color, HorizontalAlignment align, int size)
+        private void showMsgToRichTextBox(String text, int line)
         {
+            richTextBox1.DeselectAll();
+
+            while (richTextBox1.Lines.Length <= line)
+            {
+                // if current lines are not enough, insert line. Otherwise it will crash.
+                richTextBox1.AppendText("\n");
+            }
+
             String[] lines = richTextBox1.Lines;
             lines[line] = text;
             richTextBox1.Lines = lines;
-            int start = richTextBox1.GetFirstCharIndexFromLine(line);
-            int length = richTextBox1.Lines[line].Length;
-            richTextBox1.Select(start, length);
-            Font font = new Font(richTextBox1.SelectedText, size);
-            richTextBox1.SelectionColor = color;
-            richTextBox1.SelectionAlignment = align;
-            richTextBox1.SelectionFont = font;
+
+            for (int i = 0; i < richTextBox1.Lines.Length; i++)
+            {
+                int start = richTextBox1.GetFirstCharIndexFromLine(i);
+                int length = richTextBox1.Lines[i].Length;
+                richTextBox1.Select(start, length);
+
+                Font font = new Font(richTextBox1.SelectedText, richTextBoxFontSize[i]);
+                richTextBox1.SelectionColor = richTextBoxColor[i];
+                richTextBox1.SelectionAlignment = richTextBoxAlignment[i];
+                richTextBox1.SelectionFont = font;
+            }
         }
         
         private List<string> autoGetSerialPort()
@@ -350,8 +366,8 @@ namespace SerialPort
 
             bool testresult = true;
 
-            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), 
-                                    new object[] { "Test in progress...", 1, Color.Blue, HorizontalAlignment.Left, statusFont });
+            richTextBoxColor[1] = Color.Blue;
+            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test in progress...", 1 });
 
             ///////////////////////////////////////////////// DUT Tx & REF Rx /////////////////////////////////////////////////////
 
@@ -414,20 +430,18 @@ namespace SerialPort
             if (testresult == true)
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Passed!");
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
-                                        new object[] { "Test Passed!", 1, Color.Green, HorizontalAlignment.Left, statusFont });
+                richTextBoxColor[1] = Color.Green;
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Passed!", 1 });
                 completeDevice++;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), 
-                                        new object[] { "Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont });
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Complete devices: " + completeDevice, 0 });
             }
             else
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Failed!");
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
-                                        new object[] { "Test Failed!", 1, Color.Red, HorizontalAlignment.Left, statusFont });
+                richTextBoxColor[1] = Color.Red;
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Failed!", 1 });
                 completeDevice++;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
-                                        new object[] { "Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont });
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Complete devices: " + completeDevice, 0 });
             }
 
             // initialize all flags
@@ -442,8 +456,8 @@ namespace SerialPort
             {
                 if (autoConnectPort() == false)
                 {
-                    richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
-                                             new object[] { "Cannot connect to devices!", 1, Color.Red, HorizontalAlignment.Left, statusFont });
+                    richTextBoxColor[1] = Color.Red;
+                    richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", 1 });
                     return;
                 }
             }
