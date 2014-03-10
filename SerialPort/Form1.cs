@@ -8,33 +8,13 @@ using System.Threading;
 using System.Diagnostics;
 using System.Windows;
 using System.Text.RegularExpressions;
+using System.Drawing;
 
 namespace SerialPort
 {
     public partial class Form1 : Form
     {
-        public Form1()
-        {
-            InitializeComponent();
-            disconnectButton.Enabled = false;
-            //startBurnButton.Enabled = false;
-            //startTestButton.Enabled = false;
-            sendButton.Enabled = false;
-            advancedPanel.Visible = false;
-
-            foreach (String s in System.IO.Ports.SerialPort.GetPortNames()) 
-            {
-                DUTPort.Items.Add(s);
-                REFPort.Items.Add(s);
-            }
-
-            // add selection items for buad rate
-            cmbbaudrate.Items.Add("115200");
-            cmbbaudrate.Items.Add("3000000");
-
-            // set default Serial Port configuration
-            cmbbaudrate.Text = "115200";
-        }
+        int completeDevice = 0;
 
         // sport will be null when declared
         public System.IO.Ports.SerialPort dutPort;
@@ -52,19 +32,41 @@ namespace SerialPort
         Int32 DUTreceivedPacketsNum = 0;
         Int32 REFreceivedPacketsNum = 0;
 
+        private delegate void SetTextCallback(string text);
+        private delegate void SetRichTextCallback(string text, Color color);
+
+        public Form1()
+        {
+            InitializeComponent();
+            disconnectButton.Enabled = false;
+            sendButton.Enabled = false;
+            advancedPanel.Visible = false;
+
+            foreach (String s in System.IO.Ports.SerialPort.GetPortNames()) 
+            {
+                DUTPort.Items.Add(s);
+                REFPort.Items.Add(s);
+            }
+
+            // add selection items for buad rate
+            cmbbaudrate.Items.Add("115200");
+            cmbbaudrate.Items.Add("3000000");
+
+            // set default Serial Port configuration
+            cmbbaudrate.Text = "115200";
+
+            richTextBox1.AppendText("Complete devices: " + completeDevice + "\n");
+        }
+
         // called by event handler to check the sender is dutPort or refPort, and return "DUT" or "REF".
         public String getPortNameFromSenderOrPortObject(object sender)
         {
             String portname = null;
 
             if (sender == dutPort)
-            {
                 portname = "DUT";
-            }
             else if (sender == refPort)
-            {
                 portname = "REF";
-            }
 
             return portname;
         }
@@ -75,40 +77,38 @@ namespace SerialPort
             System.IO.Ports.SerialPort sport = null;
 
             if (sender == dutPort)
-            {
                 sport = dutPort;
-            }
             else if (sender == refPort)
-            {
                 sport = refPort;
-            }
 
             return sport;
         }
 
-        public void serialport_connect(String com, int baudrate , Parity parity, int databits, StopBits stopbits, ref System.IO.Ports.SerialPort sportobject) 
+        public bool serialport_connect(String com, int baudrate , Parity parity, int databits, StopBits stopbits, ref System.IO.Ports.SerialPort sportobject) 
         {
             DateTime dt = DateTime.Now;
             String dtn = dt.ToShortTimeString();
             String portname = getPortNameFromSenderOrPortObject(sportobject);
 
-            sportobject = new System.IO.Ports.SerialPort(com, baudrate, parity, databits, stopbits);
-
             try
             {
+                sportobject = new System.IO.Ports.SerialPort(com, baudrate, parity, databits, stopbits);
                 sportobject.Open();
                 disconnectButton.Enabled = true;
                 connectButton.Enabled = false;
-                //startBurnButton.Enabled = true;
-                //startTestButton.Enabled = true;
                 sendButton.Enabled = true;
                 txtReceive.AppendText("[" + dtn + "] " + portname + " is Connected\n");
                 txtReceive.AppendText("\n");
 
                 // add event hander to sportobject. this will change the content of the object, that's why we use "ref" keyword.
                 sportobject.DataReceived += new SerialDataReceivedEventHandler(sport_DataReceived);
+
+                return true;
             }
-            catch (Exception ex) { MessageBox.Show(ex.ToString(), "Error"); }
+            catch (Exception ex) { 
+                //MessageBox.Show(ex.ToString(), "Error"); 
+                return false; 
+            }
         }
 
         // Connect Button. Will connect both DUT and REF.
@@ -131,8 +131,6 @@ namespace SerialPort
             // connect REF
             serialport_connect(REF_com, baudrate, parity, databits, stopbits, ref refPort);
         }
-
-        private delegate void SetTextCallback(string text);
 
         private void showReceivedData(string text)
         {
@@ -287,8 +285,6 @@ namespace SerialPort
 
             disconnectButton.Enabled = false;
             connectButton.Enabled = true;
-            //startBurnButton.Enabled = false;
-            //startTestButton.Enabled = false;
             sendButton.Enabled = false;
         }
 
@@ -309,9 +305,12 @@ namespace SerialPort
             this.txtReceive.AppendText(result + Environment.NewLine + Environment.NewLine);
         }
 
-        private void showTestResultForRichTextBox(String result)
+        private void showTestResultForRichTextBox(String text, Color color)
         {
-            this.richTextBox1.AppendText(result + Environment.NewLine + Environment.NewLine);
+            this.richTextBox1.AppendText(text);
+            richTextBox1.Select(richTextBox1.GetFirstCharIndexOfCurrentLine(), text.Length);
+            richTextBox1.SelectionColor = color;
+            richTextBox1.SelectionAlignment = HorizontalAlignment.Center;
         }
 
         private void startButtonThreadCallback()
@@ -324,6 +323,8 @@ namespace SerialPort
             byte[] HCI_LE_Test_End = { 0x01, 0x1F, 0x20, 0x00 };
 
             bool testresult = true;
+
+            richTextBox1.BeginInvoke(new SetRichTextCallback(showTestResultForRichTextBox), new object[] { "Test in progress...", Color.Blue });
 
             ///////////////////////////////////////////////// DUT Tx & REF Rx /////////////////////////////////////////////////////
 
@@ -365,7 +366,7 @@ namespace SerialPort
             sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
 
             // sleep for 2 sec to wait for all events.
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
 
             if (isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
             {
@@ -386,19 +387,19 @@ namespace SerialPort
             if (testresult == true)
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Passed!");
-                richTextBox1.BeginInvoke(new SetTextCallback(showTestResultForRichTextBox), "Test Passed!");
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showTestResultForRichTextBox), new object[] { "Test Passed!", Color.Green });
             }
             else
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showTestResult), "Test Failed!");
-                richTextBox1.BeginInvoke(new SetTextCallback(showTestResultForRichTextBox), "Test Failed!");
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showTestResultForRichTextBox), new object[] { "Test Failed!", Color.Green });
             }
 
             // initialize all flags
             initEvtReceivedFlags();
         }
 
-        private List<string> GetSerialPort()
+        private List<string> autoGetSerialPort()
         {
             List<string> comports = new List<string>();
 
@@ -425,11 +426,12 @@ namespace SerialPort
         }
 
         // Automatically detect com port if not selected. When advanced penal is disabled, this function will be used.
-        private void autoConnectPort()
+        private bool autoConnectPort()
         {
+            bool returnStatus = false; //set to unsuccess first
             String dutPortName = "";
             String refPortName = "";
-            List<string> comports = GetSerialPort();
+            List<string> comports = autoGetSerialPort();
 
             foreach (string description in comports)
             {
@@ -459,10 +461,14 @@ namespace SerialPort
             int databits = 8;
             StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
-            // connect DUT
-            serialport_connect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort);
-            // connect REF
-            serialport_connect(refPortName, baudrate, parity, databits, stopbits, ref refPort);
+            
+            if (serialport_connect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort) &&   // connect DUT
+                serialport_connect(refPortName, baudrate, parity, databits, stopbits, ref refPort))     // connect REF
+            {
+                returnStatus = true; //success
+            }
+
+            return returnStatus;
         }
 
         // Start Test Button
@@ -471,7 +477,11 @@ namespace SerialPort
             // make sure sport is already assigned a value by serialport_connect method.
             if (dutPort == null || refPort == null)
             {
-                autoConnectPort();
+                if (autoConnectPort() == false)
+                {
+                    richTextBox1.BeginInvoke(new SetRichTextCallback(showTestResultForRichTextBox), new object[] { "Cannot connect to devices!", Color.Red });
+                    return;
+                }
             }
 
             System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(startButtonThreadCallback));
