@@ -86,10 +86,9 @@ namespace SerialPort
                 int length = richTextBox1.Lines[i].Length;
                 richTextBox1.Select(start, length);
 
-                Font font = new Font(richTextBox1.SelectedText, richTextBoxFontSize[i]);
                 richTextBox1.SelectionColor = richTextBoxColor[i];
                 richTextBox1.SelectionAlignment = richTextBoxAlignment[i];
-                richTextBox1.SelectionFont = font;
+                richTextBox1.SelectionFont = new Font(richTextBox1.SelectedText, richTextBoxFontSize[i]);
             }
         }
         
@@ -100,8 +99,7 @@ namespace SerialPort
             try
             {
                 ManagementObjectSearcher searcher =
-                    new ManagementObjectSearcher("root\\CIMV2",
-                    "SELECT * FROM Win32_PnPEntity");
+                    new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PnPEntity");
 
                 foreach (ManagementObject queryObj in searcher.Get())
                 {
@@ -293,8 +291,8 @@ namespace SerialPort
 
                 return true;
             }
-            catch (Exception) { 
-                //MessageBox.Show(ex.ToString(), "Error"); 
+            catch (Exception ex) { 
+                MessageBox.Show(ex.ToString(), "Error"); 
                 return false; 
             }
         }
