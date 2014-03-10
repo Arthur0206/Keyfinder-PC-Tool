@@ -40,6 +40,7 @@ namespace SerialPort
 
         private delegate void SetTextCallback(string text);
         private delegate void SetRichTextCallback(String text, int line);
+        private delegate void SetButtonCallback(bool enable);
 
         public Form1()
         {
@@ -59,6 +60,16 @@ namespace SerialPort
             isREFReceivedTestEndEvt = 0;
             DUTreceivedPacketsNum = 0;
             REFreceivedPacketsNum = 0;
+        }
+
+        private void setTestButtonEnabled(bool enabled)
+        {
+            startTestButton.Enabled = enabled;
+        }
+
+        private void setBurnButtonEnabled(bool enabled)
+        {
+            startBurnButton.Enabled = enabled;
         }
 
         private void showMsgToTextBox(string text)
@@ -449,23 +460,29 @@ namespace SerialPort
             {
                 MessageBox.Show("Failed to close serial port.", "Error");
             }
+
+            startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
+            startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
         }
 
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
         {
+            startTestButton.Enabled = false;
+            startBurnButton.Enabled = false;
+
             bool dutDetected = true;
             bool refDetected = true;
 
             // make sure sport is already assigned a value by serialPortConnect method.
             if (dutPort == null || !dutPort.IsOpen)
             {
-                dutDetected = autoDetectAndConnectPort("COM4", ref dutPort);
+                dutDetected = autoDetectAndConnectPort("COM4", ref dutPort); //change to "CC2541" later
             }
 
             if (refPort == null || !refPort.IsOpen)
             {
-                refDetected = autoDetectAndConnectPort("COM9", ref refPort);
+                refDetected = autoDetectAndConnectPort("COM9", ref refPort); //change to "CC2540" later
             }
 
             if (!dutDetected || !refDetected)
