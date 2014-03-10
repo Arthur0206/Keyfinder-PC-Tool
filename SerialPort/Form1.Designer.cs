@@ -32,15 +32,15 @@
             this.connectButton = new System.Windows.Forms.Button();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.label1 = new System.Windows.Forms.Label();
-            this.cmbbaudrate = new System.Windows.Forms.ComboBox();
+            this.comboBoxBaudrate = new System.Windows.Forms.ComboBox();
             this.sendButton = new System.Windows.Forms.Button();
             this.txtDatatoSend = new System.Windows.Forms.TextBox();
             this.disconnectButton = new System.Windows.Forms.Button();
-            this.DUTPort = new System.Windows.Forms.ComboBox();
+            this.comboBoxDUTPort = new System.Windows.Forms.ComboBox();
             this.txtReceive = new System.Windows.Forms.TextBox();
             this.startTestButton = new System.Windows.Forms.Button();
             this.startBurnButton = new System.Windows.Forms.Button();
-            this.REFPort = new System.Windows.Forms.ComboBox();
+            this.comboBoxREFPort = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.serialPort2 = new System.IO.Ports.SerialPort(this.components);
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
@@ -77,18 +77,18 @@
             this.label1.TabIndex = 3;
             this.label1.Text = "DUT Port:";
             // 
-            // cmbbaudrate
+            // comboBoxBaudrate
             // 
-            this.cmbbaudrate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbbaudrate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cmbbaudrate.FormattingEnabled = true;
-            this.cmbbaudrate.Items.AddRange(new object[] {
+            this.comboBoxBaudrate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxBaudrate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxBaudrate.FormattingEnabled = true;
+            this.comboBoxBaudrate.Items.AddRange(new object[] {
             "9600"});
-            this.cmbbaudrate.Location = new System.Drawing.Point(139, 41);
-            this.cmbbaudrate.Margin = new System.Windows.Forms.Padding(4);
-            this.cmbbaudrate.Name = "cmbbaudrate";
-            this.cmbbaudrate.Size = new System.Drawing.Size(108, 26);
-            this.cmbbaudrate.TabIndex = 15;
+            this.comboBoxBaudrate.Location = new System.Drawing.Point(139, 41);
+            this.comboBoxBaudrate.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxBaudrate.Name = "comboBoxBaudrate";
+            this.comboBoxBaudrate.Size = new System.Drawing.Size(108, 26);
+            this.comboBoxBaudrate.TabIndex = 15;
             // 
             // sendButton
             // 
@@ -121,16 +121,16 @@
             this.disconnectButton.UseVisualStyleBackColor = true;
             this.disconnectButton.Click += new System.EventHandler(this.disconnectButton_Click);
             // 
-            // DUTPort
+            // comboBoxDUTPort
             // 
-            this.DUTPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.DUTPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DUTPort.FormattingEnabled = true;
-            this.DUTPort.Location = new System.Drawing.Point(13, 41);
-            this.DUTPort.Margin = new System.Windows.Forms.Padding(4);
-            this.DUTPort.Name = "DUTPort";
-            this.DUTPort.Size = new System.Drawing.Size(104, 26);
-            this.DUTPort.TabIndex = 19;
+            this.comboBoxDUTPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxDUTPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxDUTPort.FormattingEnabled = true;
+            this.comboBoxDUTPort.Location = new System.Drawing.Point(13, 41);
+            this.comboBoxDUTPort.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxDUTPort.Name = "comboBoxDUTPort";
+            this.comboBoxDUTPort.Size = new System.Drawing.Size(104, 26);
+            this.comboBoxDUTPort.TabIndex = 19;
             // 
             // txtReceive
             // 
@@ -166,16 +166,16 @@
             this.startBurnButton.UseVisualStyleBackColor = true;
             this.startBurnButton.Click += new System.EventHandler(this.startBurnButton_Click);
             // 
-            // REFPort
+            // comboBoxREFPort
             // 
-            this.REFPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.REFPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.REFPort.FormattingEnabled = true;
-            this.REFPort.Location = new System.Drawing.Point(13, 87);
-            this.REFPort.Margin = new System.Windows.Forms.Padding(4);
-            this.REFPort.Name = "REFPort";
-            this.REFPort.Size = new System.Drawing.Size(104, 26);
-            this.REFPort.TabIndex = 24;
+            this.comboBoxREFPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxREFPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxREFPort.FormattingEnabled = true;
+            this.comboBoxREFPort.Location = new System.Drawing.Point(13, 87);
+            this.comboBoxREFPort.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxREFPort.Name = "comboBoxREFPort";
+            this.comboBoxREFPort.Size = new System.Drawing.Size(104, 26);
+            this.comboBoxREFPort.TabIndex = 24;
             // 
             // label2
             // 
@@ -217,13 +217,13 @@
             this.advancedGroupBox.Controls.Add(this.disconnectButton);
             this.advancedGroupBox.Controls.Add(this.sendButton);
             this.advancedGroupBox.Controls.Add(this.label2);
-            this.advancedGroupBox.Controls.Add(this.REFPort);
+            this.advancedGroupBox.Controls.Add(this.comboBoxREFPort);
             this.advancedGroupBox.Controls.Add(this.txtReceive);
             this.advancedGroupBox.Controls.Add(this.connectButton);
-            this.advancedGroupBox.Controls.Add(this.cmbbaudrate);
+            this.advancedGroupBox.Controls.Add(this.comboBoxBaudrate);
             this.advancedGroupBox.Controls.Add(this.label5);
             this.advancedGroupBox.Controls.Add(this.label1);
-            this.advancedGroupBox.Controls.Add(this.DUTPort);
+            this.advancedGroupBox.Controls.Add(this.comboBoxDUTPort);
             this.advancedGroupBox.Controls.Add(this.txtDatatoSend);
             this.advancedGroupBox.Location = new System.Drawing.Point(14, 10);
             this.advancedGroupBox.Margin = new System.Windows.Forms.Padding(10);
@@ -304,15 +304,15 @@
         private System.Windows.Forms.Button connectButton;
         private System.IO.Ports.SerialPort serialPort1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox cmbbaudrate;
+        private System.Windows.Forms.ComboBox comboBoxBaudrate;
         private System.Windows.Forms.Button sendButton;
         private System.Windows.Forms.TextBox txtDatatoSend;
         private System.Windows.Forms.Button disconnectButton;
-        private System.Windows.Forms.ComboBox DUTPort;
+        private System.Windows.Forms.ComboBox comboBoxDUTPort;
         private System.Windows.Forms.TextBox txtReceive;
         private System.Windows.Forms.Button startTestButton;
         private System.Windows.Forms.Button startBurnButton;
-        private System.Windows.Forms.ComboBox REFPort;
+        private System.Windows.Forms.ComboBox comboBoxREFPort;
         private System.Windows.Forms.Label label2;
         private System.IO.Ports.SerialPort serialPort2;
         private System.Windows.Forms.RichTextBox richTextBox1;

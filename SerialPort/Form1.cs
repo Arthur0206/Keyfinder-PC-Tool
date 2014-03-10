@@ -169,16 +169,16 @@ namespace SerialPort
 
             foreach (String s in System.IO.Ports.SerialPort.GetPortNames())
             {
-                DUTPort.Items.Add(s);
-                REFPort.Items.Add(s);
+                comboBoxDUTPort.Items.Add(s);
+                comboBoxREFPort.Items.Add(s);
             }
 
             // add selection items for buad rate
-            cmbbaudrate.Items.Add("115200");
-            cmbbaudrate.Items.Add("3000000");
+            comboBoxBaudrate.Items.Add("115200");
+            comboBoxBaudrate.Items.Add("3000000");
 
             // set default Serial Port configuration
-            cmbbaudrate.Text = "115200";
+            comboBoxBaudrate.Text = "115200";
         }
 
         public void StartProc(string exePath)
@@ -450,7 +450,7 @@ namespace SerialPort
         private void startTestButton_Click(object sender, EventArgs e)
         {
             // make sure sport is already assigned a value by serialPortConnect method.
-            if (dutPort == null || refPort == null)
+            if (dutPort == null || refPort == null || !dutPort.IsOpen || !refPort.IsOpen)
             {
                 if (autoConnectPort() == false)
                 {
@@ -481,22 +481,22 @@ namespace SerialPort
         // Connect Button. Will connect both DUT and REF.
         private void connectButton_Click(object sender, EventArgs e)
         {
-            String DUT_com = DUTPort.Text;
-            String REF_com = REFPort.Text;
+            String dutComName = comboBoxDUTPort.Text;
+            String refComName = comboBoxREFPort.Text;
 
             // if port is not selected
-            if (DUT_com == "" || REF_com == "")
+            if (dutComName == "" || refComName == "")
                 return;
 
-            int baudrate = Convert.ToInt32(cmbbaudrate.Text);
+            int baudrate = Convert.ToInt32(comboBoxBaudrate.Text);
             Parity parity = (Parity)Enum.Parse(typeof(Parity), "None");
             int databits = 8;
             StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
             // connect DUT
-            serialPortConnect(DUT_com, baudrate, parity, databits, stopbits, ref dutPort);
+            serialPortConnect(dutComName, baudrate, parity, databits, stopbits, ref dutPort);
             // connect REF
-            serialPortConnect(REF_com, baudrate, parity, databits, stopbits, ref refPort);
+            serialPortConnect(refComName, baudrate, parity, databits, stopbits, ref refPort);
         }
         
         // Send Button. Send msg to both REF and DUT.
