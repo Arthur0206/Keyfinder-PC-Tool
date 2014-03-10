@@ -204,7 +204,7 @@
             this.checkBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.checkBox1.Location = new System.Drawing.Point(0, 338);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Padding = new System.Windows.Forms.Padding(15, 10, 0, 0);
+            this.checkBox1.Padding = new System.Windows.Forms.Padding(380, 0, 0, 10);
             this.checkBox1.Size = new System.Drawing.Size(540, 31);
             this.checkBox1.TabIndex = 26;
             this.checkBox1.Text = "Advanced Panel";
