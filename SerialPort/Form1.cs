@@ -109,54 +109,38 @@ namespace SerialPort
                     }
                 }
             }
-            catch (ManagementException e)
+            catch (ManagementException)
             {
-                MessageBox.Show(e.Message);
+                MessageBox.Show("Failed to autodetect serial port.", "Error");
             }
 
             return comports;
         }
 
         // Automatically detect com port if not selected. When advanced penal is disabled, this function will be used.
-        private bool autoConnectPort()
+        private bool autoDetectAndConnectPort(string deviceSignature, ref System.IO.Ports.SerialPort sportobject)
         {
-            bool returnStatus = false; //set to unsuccess first
-            String dutPortName = "";
-            String refPortName = "";
+            bool returnStatus = false;   //set to unsuccess first
             List<string> comports = autoGetSerialPort();
-
-            foreach (string description in comports)
-            {
-                // match DUT
-                string portNamePattern = "(COM[0-9])";
-                string dutPattern = "CC2540";
-                string refPattern = "CC2540";
-
-                Match portNameMatch = Regex.Match(description, portNamePattern, RegexOptions.IgnoreCase);
-                Match dutMatch = Regex.Match(description, dutPattern, RegexOptions.IgnoreCase);
-                Match refMatch = Regex.Match(description, refPattern, RegexOptions.IgnoreCase);
-
-                if (dutMatch.Success == true && dutPortName.Equals(""))
-                {
-                    //MessageBox.Show("dut comport: " + portNameMatch.Groups[1].ToString());
-                    dutPortName = portNameMatch.Groups[1].ToString();
-                }
-                else if (refMatch.Success == true && refPortName.Equals(""))
-                {
-                    //MessageBox.Show("ref comport: " + portNameMatch.Groups[1].ToString());
-                    refPortName = portNameMatch.Groups[1].ToString();
-                }
-            }
+            String portName;
 
             int baudrate = 115200;
             Parity parity = (Parity)Enum.Parse(typeof(Parity), "None");
             int databits = 8;
             StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
-            if (serialPortConnect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort) &&   // connect DUT
-                serialPortConnect(refPortName, baudrate, parity, databits, stopbits, ref refPort))     // connect REF
+            foreach (string description in comports)
             {
-                returnStatus = true; //success
+                string portNamePattern = "(COM[0-9])";
+                Match portNameMatch = Regex.Match(description, portNamePattern, RegexOptions.IgnoreCase);
+                Match descriptionMatch = Regex.Match(description, deviceSignature, RegexOptions.IgnoreCase);
+
+                if (descriptionMatch.Success == true)
+                {
+                    portName = portNameMatch.Groups[1].ToString();
+                    returnStatus = serialPortConnect(portName, baudrate, parity, databits, stopbits, ref sportobject);
+                    break;
+                }
             }
 
             return returnStatus;
@@ -231,8 +215,15 @@ namespace SerialPort
                 String dtn = dt.ToShortTimeString();
                 String portname = getPortNameFromSenderOrPortObject(sport);
 
-                // send hex array. ex 0x01, 0x31, 0xf3, 0x01, 0x16
-                sport.Write(bytesToSend, 0, len);
+                try
+                {
+                    // send hex array. ex 0x01, 0x31, 0xf3, 0x01, 0x16
+                    sport.Write(bytesToSend, 0, len);
+                }
+                catch(Exception)
+                {
+                    MessageBox.Show("Failed to write to serial port.", "Error");
+                }
 
                 // convert hex array to string. ex. convert hex bytes array {0x01, 0x31, 0xf3, 0x01, 0x16} to string 01-31-fe-01-16
                 String bytesToSendHexString = BitConverter.ToString(bytesToSend);
@@ -291,8 +282,8 @@ namespace SerialPort
 
                 return true;
             }
-            catch (Exception ex) { 
-                MessageBox.Show(ex.ToString(), "Error"); 
+            catch (Exception) { 
+                MessageBox.Show("Failed to onnect to serial port.", "Error");
                 return false; 
             }
         }
@@ -444,20 +435,44 @@ namespace SerialPort
 
             // initialize all flags
             initEvtReceivedFlags();
+
+            try
+            {
+                // Close comport here because worker could disconnect the devices. When test button is pressed next time, we will detect and connect again.
+                if (dutPort != null)
+                    dutPort.Close();
+
+                if (refPort != null)
+                    refPort.Close();
+            }
+            catch(Exception)
+            {
+                MessageBox.Show("Failed to close serial port.", "Error");
+            }
         }
 
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
         {
+            bool dutDetected = true;
+            bool refDetected = true;
+
             // make sure sport is already assigned a value by serialPortConnect method.
-            if (dutPort == null || refPort == null || !dutPort.IsOpen || !refPort.IsOpen)
+            if (dutPort == null || !dutPort.IsOpen)
             {
-                if (autoConnectPort() == false)
-                {
-                    richTextBoxColor[1] = Color.Red;
-                    richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", 1 });
-                    return;
-                }
+                dutDetected = autoDetectAndConnectPort("COM4", ref dutPort);
+            }
+
+            if (refPort == null || !refPort.IsOpen)
+            {
+                refDetected = autoDetectAndConnectPort("COM9", ref refPort);
+            }
+
+            if (!dutDetected || !refDetected)
+            {
+                richTextBoxColor[1] = Color.Red;
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", 1 });
+                return;
             }
 
             System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(testThreadMain));
