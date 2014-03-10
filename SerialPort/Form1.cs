@@ -27,6 +27,8 @@ namespace SerialPort
         public System.IO.Ports.SerialPort refPort;
 
         // 0: didn't receive, 1: received with success, 2: received with error
+        Int16 isTxPowerEvtReceived = 0;
+
         Int16 isDUTReceivedTxTestEvt = 0;
         Int16 isDUTReceivedRxTestEvt = 0;
         Int16 isDUTReceivedTestEndEvt = 0;
@@ -52,6 +54,7 @@ namespace SerialPort
 
         private void initEvtReceivedFlags()
         {
+            isTxPowerEvtReceived = 0;
             isDUTReceivedTxTestEvt = 0;
             isDUTReceivedRxTestEvt = 0;
             isDUTReceivedTestEndEvt = 0;
@@ -301,133 +304,207 @@ namespace SerialPort
 
         // Check if we received targeted HCI events, and set flags to inform StartButton thread, so that we know the test result.
         private void checkReceivedEventAndSetFlags(object receivedPort, byte[] eventBytes)
-        {
-            if (eventBytes.Length < 7 || eventBytes[0] != 0x04 || eventBytes[1] != 0x0e || eventBytes[3] != 0x00)
+        {   
+            //    length cannot < 7   || this is not an event  || this is neither LE event nor vendor specific event                    
+            if (eventBytes.Length < 7 || eventBytes[0] != 0x04 || !(eventBytes[1] == 0x0e || eventBytes[1] == 0xFF))
             {
-                // not a valid hci event packet. do nothing for now.
+                // not a known hci event packet. do nothing for now.
                 return;
             }
 
-            byte length = eventBytes[2];
-            byte status = eventBytes[6];
-
-            // 0: didn't receive, 1: received with success, 2: received with error
-            Int16 flagValue = 1;
-
-            // check for HCI_LE_Transmitter_Test: 0x201e.
-            if (eventBytes[4] == 0x1e && eventBytes[5] == 0x20)
+            if (eventBytes[1] == 0x0E)   // handle LE event
             {
-                if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
-                    flagValue = 2;
+                byte length = eventBytes[2];
+                byte status = eventBytes[6];
 
-                if (receivedPort == dutPort)
-                    isDUTReceivedTxTestEvt = flagValue;
-                else if (receivedPort == refPort)
-                    isREFReceivedTxTestEvt = flagValue;
-            }
-            // check for HCI_LE_Receiver_Test: 0x201d
-            else if (eventBytes[4] == 0x1d && eventBytes[5] == 0x20)
-            {
-                if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
-                    flagValue = 2;
+                // 0: didn't receive, 1: received with success, 2: received with error
+                Int16 flagValue = 1;
 
-                if (receivedPort == dutPort)
-                    isDUTReceivedRxTestEvt = flagValue;
-                else if (receivedPort == refPort)
-                    isREFReceivedRxTestEvt = flagValue;
-            }
-            // check for HCI_Test_End: 0x201f
-            else if (eventBytes[4] == 0x1f && eventBytes[5] == 0x20)
-            {
-                if (length != 0x06 || status != 0x00 || eventBytes.Length != 9)
-                    flagValue = 2;
-
-                if (receivedPort == dutPort)
+                // check for HCI_LE_Transmitter_Test: 0x201e.
+                if (eventBytes[4] == 0x1e && eventBytes[5] == 0x20)
                 {
-                    isDUTReceivedTestEndEvt = flagValue;
-                    DUTreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                    if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
+                        flagValue = 2;
+
+                    if (receivedPort == dutPort)
+                        isDUTReceivedTxTestEvt = flagValue;
+                    else if (receivedPort == refPort)
+                        isREFReceivedTxTestEvt = flagValue;
                 }
-                else if (receivedPort == refPort)
+                // check for HCI_LE_Receiver_Test: 0x201d
+                else if (eventBytes[4] == 0x1d && eventBytes[5] == 0x20)
                 {
-                    isREFReceivedTestEndEvt = flagValue;
-                    REFreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                    if (length != 0x04 || status != 0x00 || eventBytes.Length != 7)
+                        flagValue = 2;
+
+                    if (receivedPort == dutPort)
+                        isDUTReceivedRxTestEvt = flagValue;
+                    else if (receivedPort == refPort)
+                        isREFReceivedRxTestEvt = flagValue;
                 }
+                // check for HCI_Test_End: 0x201f
+                else if (eventBytes[4] == 0x1f && eventBytes[5] == 0x20)
+                {
+                    if (length != 0x06 || status != 0x00 || eventBytes.Length != 9)
+                        flagValue = 2;
+
+                    if (receivedPort == dutPort)
+                    {
+                        isDUTReceivedTestEndEvt = flagValue;
+                        DUTreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                    }
+                    else if (receivedPort == refPort)
+                    {
+                        isREFReceivedTestEndEvt = flagValue;
+                        REFreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                    }
+                }
+            }
+            else if (eventBytes[1] == 0xFF) // handle vendor specific events.
+            {
+                byte length = eventBytes[2];
+
+                // 0: didn't receive, 1: received with success
+                Int16 flagValue = 1;
+
+                if (length == 5 && eventBytes[6] == 0x01 && eventBytes[7] == 0xFC)
+                {
+                    isTxPowerEvtReceived = flagValue;
+                }
+            }
+            else
+            {
+                // should not come here.
             }
         }
 
-        private void testThreadMain()
+        // Test Case: DUT is tx, REF is rx
+        private bool txTest()
         {
             // LE Transmitter Test: channel 37, byte length 1, pattern 10101010
-            byte[] HCIHCI_LE_Transmitter_Test = { 0x01, 0x1E, 0x20, 0x03, 0x25, 0x01, 0x02 };
+            byte[] HCI_LE_Transmitter_Test = { 0x01, 0x1E, 0x20, 0x03, 0x25, 0x01, 0x02 };
             // HCI_LE_Receiver_Test: channel 37
             byte[] HCI_LE_Receiver_Test = { 0x01, 0x1D, 0x20, 0x01, 0x25 };
             // HCI_LE_Test_End
             byte[] HCI_LE_Test_End = { 0x01, 0x1F, 0x20, 0x00 };
+            // HCI_EXT_SetTxPower: vendor specific command, output power index - (0) -23dBm (1) -6dBm (2) 0dBm (3) 4dBm
+            byte[] HCI_EXT_SetTxPower = { 0x01, 0x01, 0xFC, 0x01, 0x02 };
 
             bool testresult = true;
+
+            // set DUT's Tx power - CC2541 supports only 0dBm, -6dBm, -23dBm.
+            for (int txPowerIdx = 2; txPowerIdx >= 0; txPowerIdx--)
+            {
+                HCI_EXT_SetTxPower[4] = (byte)txPowerIdx;
+                serialPortSendHCICommand(HCI_EXT_SetTxPower, HCI_EXT_SetTxPower.Length, "HCI_EXT_SetTxPower", refPort);
+
+                for (int channel = 37; channel <= 39; channel++)
+                {
+                    HCI_LE_Transmitter_Test[4] = (byte)channel;
+                    HCI_LE_Receiver_Test[4] = (byte)channel;
+
+                    serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", refPort);
+                    serialPortSendHCICommand(HCI_LE_Transmitter_Test, HCI_LE_Transmitter_Test.Length, "HCI_LE_Transmitter_Test", dutPort);
+                    // sleep for 1 sec
+                    Thread.Sleep(1000);
+                    serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
+                    serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+
+                    // sleep for 1 sec to wait for all events.
+                    Thread.Sleep(1000);
+
+                    if (isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1 && isTxPowerEvtReceived == 1)
+                    {
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF Received " + REFreceivedPacketsNum + " Packets");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+
+                        if (REFreceivedPacketsNum < 1500)
+                            testresult = false;
+                    }
+                    else
+                    {
+                        testresult = false;
+                    }
+                }
+            }
+
+            // return success if all cases are passed. return false is any case failed.
+            return testresult;
+        }
+
+        // Test Case: DUT is rx, REF is tx
+        private bool rxTest()
+        {
+            // LE Transmitter Test: channel 37, byte length 1, pattern 10101010
+            byte[] HCI_LE_Transmitter_Test = { 0x01, 0x1E, 0x20, 0x03, 0x25, 0x01, 0x02 };
+            // HCI_LE_Receiver_Test: channel 37
+            byte[] HCI_LE_Receiver_Test = { 0x01, 0x1D, 0x20, 0x01, 0x25 };
+            // HCI_LE_Test_End
+            byte[] HCI_LE_Test_End = { 0x01, 0x1F, 0x20, 0x00 };
+            // HCI_EXT_SetTxPower: vendor specific command, output power index - (0) -23dBm (1) -6dBm (2) 0dBm (3) 4dBm
+            byte[] HCI_EXT_SetTxPower = { 0x01, 0x01, 0xFC, 0x01, 0x02 };
+
+            bool testresult = true;
+
+            // set REF's Tx power - CC2540 support 4dBm, 0dBm, -6dBm, -23dBm.
+            for (int txPowerIdx = 2; txPowerIdx >= 0; txPowerIdx--) 
+            {
+                HCI_EXT_SetTxPower[4] = (byte)txPowerIdx;
+                serialPortSendHCICommand(HCI_EXT_SetTxPower, HCI_EXT_SetTxPower.Length, "HCI_EXT_SetTxPower", refPort);
+
+                for (int channel = 37; channel <= 39; channel++)
+                {
+                    HCI_LE_Transmitter_Test[4] = (byte)channel;
+                    HCI_LE_Receiver_Test[4] = (byte)channel;
+
+                    serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", dutPort);
+                    serialPortSendHCICommand(HCI_LE_Transmitter_Test, HCI_LE_Transmitter_Test.Length, "HCI_LE_Transmitter_Test", refPort);
+                    // sleep for 1 sec
+                    Thread.Sleep(1000);
+                    serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+                    serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
+
+                    // sleep for 2 sec to wait for all events.
+                    Thread.Sleep(1000);
+
+                    if (isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1 && isTxPowerEvtReceived == 1)
+                    {
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT Received " + DUTreceivedPacketsNum + " Packets");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+
+                        if (DUTreceivedPacketsNum < 1500)
+                            testresult = false;
+                    }
+                    else
+                    {
+                        testresult = false;
+                    }
+                }
+            }
+
+            // return success if all cases are passed. return false is any case failed.
+            return testresult;
+        }
+
+        private void testThreadMain()
+        {
+            bool txTestResult;
+            bool rxTestResult;
 
             richTextBoxColor[1] = Color.Blue;
             richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test in progress...", 1 });
 
-            ///////////////////////////////////////////////// DUT Tx & REF Rx /////////////////////////////////////////////////////
+            initEvtReceivedFlags();
+            txTestResult = txTest();
 
             initEvtReceivedFlags();
+            rxTestResult = rxTest();
 
-            serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", refPort);
-            serialPortSendHCICommand(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", dutPort);
-            // sleep for 1 sec
-            Thread.Sleep(1000);
-            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
-            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
-
-            // sleep for 1 sec to wait for all events.
-            Thread.Sleep(1000);
-
-            if (isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
-            {
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF Received " + REFreceivedPacketsNum + " Packets");
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-
-                if (REFreceivedPacketsNum < 1500)
-                    testresult = false;
-            }
-            else
-            {
-                testresult = false;
-            }
-
-            ///////////////////////////////////////////////// REF Tx & DUT Rx /////////////////////////////////////////////////////
-
-            initEvtReceivedFlags();
-
-            serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", dutPort);
-            serialPortSendHCICommand(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", refPort);
-            // sleep for 1 sec
-            Thread.Sleep(1000);
-            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
-            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
-
-            // sleep for 2 sec to wait for all events.
-            Thread.Sleep(1000);
-
-            if (isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1)
-            {
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT Received " + DUTreceivedPacketsNum + " Packets");
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-
-                if (DUTreceivedPacketsNum < 1500)
-                    testresult = false;
-            }
-            else
-            {
-                testresult = false;
-            }
-
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            if (testresult == true)
+            if (txTestResult && rxTestResult)
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Passed!");
                 richTextBoxColor[1] = Color.Green;
@@ -570,6 +647,11 @@ namespace SerialPort
             disconnectButton.Enabled = false;
             connectButton.Enabled = true;
             sendButton.Enabled = false;
+        }
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            txtReceive.Clear();
         }
     }
 }

@@ -50,6 +50,7 @@
             this.generalGroupBox = new System.Windows.Forms.GroupBox();
             this.advancedPanel = new System.Windows.Forms.Panel();
             this.generalPanel = new System.Windows.Forms.Panel();
+            this.buttonClear = new System.Windows.Forms.Button();
             this.advancedGroupBox.SuspendLayout();
             this.generalGroupBox.SuspendLayout();
             this.advancedPanel.SuspendLayout();
@@ -92,10 +93,10 @@
             // 
             // sendButton
             // 
-            this.sendButton.Location = new System.Drawing.Point(390, 86);
+            this.sendButton.Location = new System.Drawing.Point(267, 86);
             this.sendButton.Margin = new System.Windows.Forms.Padding(4);
             this.sendButton.Name = "sendButton";
-            this.sendButton.Size = new System.Drawing.Size(107, 28);
+            this.sendButton.Size = new System.Drawing.Size(104, 28);
             this.sendButton.TabIndex = 16;
             this.sendButton.Text = "Send";
             this.sendButton.UseVisualStyleBackColor = true;
@@ -107,7 +108,7 @@
             this.txtDatatoSend.Location = new System.Drawing.Point(139, 89);
             this.txtDatatoSend.Margin = new System.Windows.Forms.Padding(4);
             this.txtDatatoSend.Name = "txtDatatoSend";
-            this.txtDatatoSend.Size = new System.Drawing.Size(232, 24);
+            this.txtDatatoSend.Size = new System.Drawing.Size(108, 24);
             this.txtDatatoSend.TabIndex = 17;
             // 
             // disconnectButton
@@ -214,6 +215,7 @@
             // 
             // advancedGroupBox
             // 
+            this.advancedGroupBox.Controls.Add(this.buttonClear);
             this.advancedGroupBox.Controls.Add(this.disconnectButton);
             this.advancedGroupBox.Controls.Add(this.sendButton);
             this.advancedGroupBox.Controls.Add(this.label2);
@@ -275,6 +277,17 @@
             this.generalPanel.Size = new System.Drawing.Size(540, 325);
             this.generalPanel.TabIndex = 26;
             // 
+            // buttonClear
+            // 
+            this.buttonClear.Location = new System.Drawing.Point(391, 86);
+            this.buttonClear.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonClear.Name = "buttonClear";
+            this.buttonClear.Size = new System.Drawing.Size(107, 28);
+            this.buttonClear.TabIndex = 25;
+            this.buttonClear.Text = "Clear";
+            this.buttonClear.UseVisualStyleBackColor = true;
+            this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -322,6 +335,7 @@
         private System.Windows.Forms.GroupBox generalGroupBox;
         private System.Windows.Forms.Panel advancedPanel;
         private System.Windows.Forms.Panel generalPanel;
+        private System.Windows.Forms.Button buttonClear;
     }
 }
 
