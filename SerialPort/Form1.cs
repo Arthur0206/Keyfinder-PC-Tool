@@ -35,14 +35,20 @@ namespace SerialPort
         private delegate void SetTextCallback(string text);
         private delegate void SetRichTextCallback(string text, Color color);
 
-        public Form1()
+        private void initAdvancedPanel()
         {
-            InitializeComponent();
             disconnectButton.Enabled = false;
             sendButton.Enabled = false;
-            advancedPanel.Visible = false;
+            DUTPort.Enabled = false;
+            REFPort.Enabled = false;
+            cmbbaudrate.Enabled = false;
+            connectButton.Enabled = false;
+            txtDatatoSend.Enabled = false;
+            label1.Enabled = false;
+            label2.Enabled = false;
+            label5.Enabled = false;
 
-            foreach (String s in System.IO.Ports.SerialPort.GetPortNames()) 
+            foreach (String s in System.IO.Ports.SerialPort.GetPortNames())
             {
                 DUTPort.Items.Add(s);
                 REFPort.Items.Add(s);
@@ -54,7 +60,13 @@ namespace SerialPort
 
             // set default Serial Port configuration
             cmbbaudrate.Text = "115200";
+        }
 
+        public Form1()
+        {
+            InitializeComponent();
+            initAdvancedPanel();
+            advancedPanel.Visible = false;
             richTextBox1.AppendText("Complete devices: " + completeDevice + "\n");
         }
 

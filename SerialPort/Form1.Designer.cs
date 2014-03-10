@@ -202,7 +202,7 @@
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.checkBox1.Location = new System.Drawing.Point(0, 0);
+            this.checkBox1.Location = new System.Drawing.Point(0, 338);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Padding = new System.Windows.Forms.Padding(15, 10, 0, 0);
             this.checkBox1.Size = new System.Drawing.Size(540, 31);
@@ -259,7 +259,7 @@
             // 
             this.advancedPanel.Controls.Add(this.advancedGroupBox);
             this.advancedPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.advancedPanel.Location = new System.Drawing.Point(0, 31);
+            this.advancedPanel.Location = new System.Drawing.Point(0, 369);
             this.advancedPanel.Name = "advancedPanel";
             this.advancedPanel.Size = new System.Drawing.Size(540, 394);
             this.advancedPanel.TabIndex = 29;
@@ -269,7 +269,7 @@
             this.generalPanel.AutoSize = true;
             this.generalPanel.Controls.Add(this.generalGroupBox);
             this.generalPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.generalPanel.Location = new System.Drawing.Point(0, 425);
+            this.generalPanel.Location = new System.Drawing.Point(0, 0);
             this.generalPanel.Name = "generalPanel";
             this.generalPanel.Size = new System.Drawing.Size(540, 338);
             this.generalPanel.TabIndex = 26;
@@ -280,9 +280,9 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(540, 765);
-            this.Controls.Add(this.generalPanel);
             this.Controls.Add(this.advancedPanel);
             this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.generalPanel);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(558, 0);
