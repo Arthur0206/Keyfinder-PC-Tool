@@ -15,6 +15,8 @@ namespace SerialPort
     public partial class Form1 : Form
     {
         int completeDevice = 0;
+        int statusFont = 20;
+        int completeDeviceFont = 10;
 
         // sport will be null when declared
         public System.IO.Ports.SerialPort dutPort;
@@ -33,14 +35,15 @@ namespace SerialPort
         Int32 REFreceivedPacketsNum = 0;
 
         private delegate void SetTextCallback(string text);
-        private delegate void SetRichTextCallback(string text, Color color);
+        private delegate void SetRichTextCallback(String text, int line, Color color, HorizontalAlignment align, int size);
 
         public Form1()
         {
             InitializeComponent();
             initAdvancedPanel();
             advancedPanel.Visible = false;
-            richTextBox1.AppendText("Complete devices: " + completeDevice + "\n");
+            richTextBox1.AppendText("\n");
+            showMsgToRichTextBox("Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont);
         }
 
         private void initEvtReceivedFlags()
@@ -60,12 +63,18 @@ namespace SerialPort
             this.txtReceive.AppendText(text + Environment.NewLine + Environment.NewLine);
         }
 
-        private void showMsgToRichTextBox(String text, Color color)
+        private void showMsgToRichTextBox(String text, int line, Color color, HorizontalAlignment align, int size)
         {
-            this.richTextBox1.AppendText(text);
-            richTextBox1.Select(richTextBox1.GetFirstCharIndexOfCurrentLine(), text.Length);
+            String[] lines = richTextBox1.Lines;
+            lines[line] = text;
+            richTextBox1.Lines = lines;
+            int start = richTextBox1.GetFirstCharIndexFromLine(line);
+            int length = richTextBox1.Lines[line].Length;
+            richTextBox1.Select(start, length);
+            Font font = new Font(richTextBox1.SelectedText, size);
             richTextBox1.SelectionColor = color;
-            richTextBox1.SelectionAlignment = HorizontalAlignment.Center;
+            richTextBox1.SelectionAlignment = align;
+            richTextBox1.SelectionFont = font;
         }
         
         private List<string> autoGetSerialPort()
@@ -130,9 +139,8 @@ namespace SerialPort
             int databits = 8;
             StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
-            
-            if (serialport_connect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort) &&   // connect DUT
-                serialport_connect(refPortName, baudrate, parity, databits, stopbits, ref refPort))     // connect REF
+            if (serialPortConnect(dutPortName, baudrate, parity, databits, stopbits, ref dutPort) &&   // connect DUT
+                serialPortConnect(refPortName, baudrate, parity, databits, stopbits, ref refPort))     // connect REF
             {
                 returnStatus = true; //success
             }
@@ -144,14 +152,6 @@ namespace SerialPort
         {
             disconnectButton.Enabled = false;
             sendButton.Enabled = false;
-            DUTPort.Enabled = false;
-            REFPort.Enabled = false;
-            cmbbaudrate.Enabled = false;
-            connectButton.Enabled = false;
-            txtDatatoSend.Enabled = false;
-            label1.Enabled = false;
-            label2.Enabled = false;
-            label5.Enabled = false;
 
             foreach (String s in System.IO.Ports.SerialPort.GetPortNames())
             {
@@ -177,7 +177,7 @@ namespace SerialPort
         }
 
         // Event handler that will be called when Serial Port receving data. Will check sender to determine if DUT or REF send this event.
-        private void sport_DataReceived(object sender, SerialDataReceivedEventArgs e) 
+        private void serialPortDataReceived(object sender, SerialDataReceivedEventArgs e) 
         {
             DateTime dt = DateTime.Now;
             String dtn = dt.ToShortTimeString();
@@ -209,7 +209,7 @@ namespace SerialPort
         }
 
         // Called by Send Button Event Handler. Will send hci cmd to both DUT and REF.
-        private void sendHexArray(byte[] bytesToSend, int len, String hciCmdName, System.IO.Ports.SerialPort sport)
+        private void serialPortSendHCICommand(byte[] bytesToSend, int len, String hciCmdName, System.IO.Ports.SerialPort sport)
         {
             if (sport != null && sport.IsOpen == true)
             {
@@ -256,7 +256,7 @@ namespace SerialPort
             return sport;
         }
 
-        public bool serialport_connect(String com, int baudrate , Parity parity, int databits, StopBits stopbits, ref System.IO.Ports.SerialPort sportobject) 
+        public bool serialPortConnect(String com, int baudrate , Parity parity, int databits, StopBits stopbits, ref System.IO.Ports.SerialPort sportobject) 
         {
             DateTime dt = DateTime.Now;
             String dtn = dt.ToShortTimeString();
@@ -273,11 +273,11 @@ namespace SerialPort
                 txtReceive.AppendText("\n");
 
                 // add event hander to sportobject. this will change the content of the object, that's why we use "ref" keyword.
-                sportobject.DataReceived += new SerialDataReceivedEventHandler(sport_DataReceived);
+                sportobject.DataReceived += new SerialDataReceivedEventHandler(serialPortDataReceived);
 
                 return true;
             }
-            catch (Exception ex) { 
+            catch (Exception) { 
                 //MessageBox.Show(ex.ToString(), "Error"); 
                 return false; 
             }
@@ -339,7 +339,7 @@ namespace SerialPort
             }
         }
 
-        private void startButtonThreadCallback()
+        private void testThreadMain()
         {
             // LE Transmitter Test: channel 37, byte length 1, pattern 10101010
             byte[] HCIHCI_LE_Transmitter_Test = { 0x01, 0x1E, 0x20, 0x03, 0x25, 0x01, 0x02 };
@@ -350,18 +350,19 @@ namespace SerialPort
 
             bool testresult = true;
 
-            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test in progress...", Color.Blue });
+            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), 
+                                    new object[] { "Test in progress...", 1, Color.Blue, HorizontalAlignment.Left, statusFont });
 
             ///////////////////////////////////////////////// DUT Tx & REF Rx /////////////////////////////////////////////////////
 
             initEvtReceivedFlags();
 
-            sendHexArray(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", refPort);
-            sendHexArray(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", dutPort);
+            serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", refPort);
+            serialPortSendHCICommand(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", dutPort);
             // sleep for 1 sec
             Thread.Sleep(1000);
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
+            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
 
             // sleep for 1 sec to wait for all events.
             Thread.Sleep(1000);
@@ -384,12 +385,12 @@ namespace SerialPort
 
             initEvtReceivedFlags();
 
-            sendHexArray(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", dutPort);
-            sendHexArray(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", refPort);
+            serialPortSendHCICommand(HCI_LE_Receiver_Test, HCI_LE_Receiver_Test.Length, "HCI_LE_Receiver_Test", dutPort);
+            serialPortSendHCICommand(HCIHCI_LE_Transmitter_Test, HCIHCI_LE_Transmitter_Test.Length, "HCIHCI_LE_Transmitter_Test", refPort);
             // sleep for 1 sec
             Thread.Sleep(1000);
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
-            sendHexArray(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
+            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
+            serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
 
             // sleep for 2 sec to wait for all events.
             Thread.Sleep(1000);
@@ -413,12 +414,20 @@ namespace SerialPort
             if (testresult == true)
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Passed!");
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Passed!", Color.Green });
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
+                                        new object[] { "Test Passed!", 1, Color.Green, HorizontalAlignment.Left, statusFont });
+                completeDevice++;
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), 
+                                        new object[] { "Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont });
             }
             else
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Failed!");
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Failed!", Color.Green });
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
+                                        new object[] { "Test Failed!", 1, Color.Red, HorizontalAlignment.Left, statusFont });
+                completeDevice++;
+                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
+                                        new object[] { "Complete devices: " + completeDevice, 0, Color.Black, HorizontalAlignment.Left, completeDeviceFont });
             }
 
             // initialize all flags
@@ -428,17 +437,18 @@ namespace SerialPort
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
         {
-            // make sure sport is already assigned a value by serialport_connect method.
+            // make sure sport is already assigned a value by serialPortConnect method.
             if (dutPort == null || refPort == null)
             {
                 if (autoConnectPort() == false)
                 {
-                    richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", Color.Red });
+                    richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox),
+                                             new object[] { "Cannot connect to devices!", 1, Color.Red, HorizontalAlignment.Left, statusFont });
                     return;
                 }
             }
 
-            System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(startButtonThreadCallback));
+            System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(testThreadMain));
             startButtonThread.Start();
         }
 
@@ -472,15 +482,15 @@ namespace SerialPort
             StopBits stopbits = (StopBits)Enum.Parse(typeof(StopBits), "One");
 
             // connect DUT
-            serialport_connect(DUT_com, baudrate, parity, databits, stopbits, ref dutPort);
+            serialPortConnect(DUT_com, baudrate, parity, databits, stopbits, ref dutPort);
             // connect REF
-            serialport_connect(REF_com, baudrate, parity, databits, stopbits, ref refPort);
+            serialPortConnect(REF_com, baudrate, parity, databits, stopbits, ref refPort);
         }
         
         // Send Button. Send msg to both REF and DUT.
         private void sendButton_Click(object sender, EventArgs e)
         {
-            // make sure sport is already assigned a value by serialport_connect method.
+            // make sure sport is already assigned a value by serialPortConnect method.
             if (refPort == null || dutPort == null || txtDatatoSend.Text.Trim() == "")
                 return;
 
@@ -488,9 +498,9 @@ namespace SerialPort
             String inputText = txtDatatoSend.Text.Trim();
             byte[] bytesToSend = inputText.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
 
-            // call sendHexArray() to send out
-            sendHexArray(bytesToSend, bytesToSend.Length, "Test Command", dutPort);
-            sendHexArray(bytesToSend, bytesToSend.Length, "Test Command", refPort);
+            // call serialPortSendHCICommand() to send out
+            serialPortSendHCICommand(bytesToSend, bytesToSend.Length, "Test Command", dutPort);
+            serialPortSendHCICommand(bytesToSend, bytesToSend.Length, "Test Command", refPort);
         }
 
         // Disconnect Button. Disconnect both DUT and REF.

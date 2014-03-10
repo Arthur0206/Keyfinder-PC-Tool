@@ -194,7 +194,8 @@
             this.richTextBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBox1.Location = new System.Drawing.Point(13, 199);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(485, 108);
+            this.richTextBox1.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.richTextBox1.Size = new System.Drawing.Size(485, 97);
             this.richTextBox1.TabIndex = 25;
             this.richTextBox1.Text = "";
             // 
@@ -202,7 +203,7 @@
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.checkBox1.Location = new System.Drawing.Point(0, 338);
+            this.checkBox1.Location = new System.Drawing.Point(0, 325);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Padding = new System.Windows.Forms.Padding(380, 0, 0, 10);
             this.checkBox1.Size = new System.Drawing.Size(540, 31);
@@ -250,7 +251,7 @@
             this.generalGroupBox.Location = new System.Drawing.Point(14, 7);
             this.generalGroupBox.Margin = new System.Windows.Forms.Padding(10);
             this.generalGroupBox.Name = "generalGroupBox";
-            this.generalGroupBox.Size = new System.Drawing.Size(512, 321);
+            this.generalGroupBox.Size = new System.Drawing.Size(512, 308);
             this.generalGroupBox.TabIndex = 28;
             this.generalGroupBox.TabStop = false;
             this.generalGroupBox.Text = "General Panel";
@@ -259,7 +260,7 @@
             // 
             this.advancedPanel.Controls.Add(this.advancedGroupBox);
             this.advancedPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.advancedPanel.Location = new System.Drawing.Point(0, 369);
+            this.advancedPanel.Location = new System.Drawing.Point(0, 356);
             this.advancedPanel.Name = "advancedPanel";
             this.advancedPanel.Size = new System.Drawing.Size(540, 394);
             this.advancedPanel.TabIndex = 29;
@@ -271,7 +272,7 @@
             this.generalPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.generalPanel.Location = new System.Drawing.Point(0, 0);
             this.generalPanel.Name = "generalPanel";
-            this.generalPanel.Size = new System.Drawing.Size(540, 338);
+            this.generalPanel.Size = new System.Drawing.Size(540, 325);
             this.generalPanel.TabIndex = 26;
             // 
             // Form1
