@@ -199,12 +199,17 @@ namespace SerialPort
 
             while (dataLen-- > 0) 
             {
-                bytesReceived.Add(Convert.ToByte(sport.ReadByte()));
+                try
+                {
+                    bytesReceived.Add(Convert.ToByte(sport.ReadByte()));
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("In function serialPortDataReceived(): failed to read bytes from serial port");
+                }
             }
-            byte[] bytesReceivedArray = bytesReceived.ToArray();
 
-            // check if we received targeted HCI events, and set flags to inform StartButton thread, so that we know the test result.
-            checkReceivedEventAndSetFlags(sender, bytesReceivedArray);
+            byte[] bytesReceivedArray = bytesReceived.ToArray();
 
             // convert byte list to byte array, then to string.
             String ReceivedHexStr = BitConverter.ToString(bytesReceivedArray);
@@ -213,6 +218,9 @@ namespace SerialPort
 
             // invoke UI thread to show received data on txtReceive. Use delegate.
             txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), ReceivedHexStr);
+
+            // check if we received targeted HCI events, and set flags to inform StartButton thread, so that we know the test result.
+            checkReceivedEventAndSetFlags(sender, bytesReceivedArray);
         }
 
         // Called by Send Button Event Handler. Will send hci cmd to both DUT and REF.
@@ -345,13 +353,13 @@ namespace SerialPort
 
                     if (receivedPort == dutPort)
                     {
-                        isDUTReceivedTestEndEvt = flagValue;
                         DUTreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                        isDUTReceivedTestEndEvt = flagValue;
                     }
                     else if (receivedPort == refPort)
                     {
-                        isREFReceivedTestEndEvt = flagValue;
                         REFreceivedPacketsNum = (Int32)eventBytes[7] + ((Int32)eventBytes[8] << 8);
+                        isREFReceivedTestEndEvt = flagValue;
                     }
                 }
             }
@@ -390,11 +398,32 @@ namespace SerialPort
             // set DUT's Tx power - CC2541 supports only 0dBm, -6dBm, -23dBm.
             for (int txPowerIdx = 2; txPowerIdx >= 0; txPowerIdx--)
             {
+                // initialize flag for setTxPower event.
+                initEvtReceivedFlags();
+
                 HCI_EXT_SetTxPower[4] = (byte)txPowerIdx;
                 serialPortSendHCICommand(HCI_EXT_SetTxPower, HCI_EXT_SetTxPower.Length, "HCI_EXT_SetTxPower", refPort);
 
+                // wait until all hci events are received.
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!(isTxPowerEvtReceived == 1))
+                {
+                    // set 5s timeout. if expired, test fail.
+                    if (sw.ElapsedMilliseconds > 5000)
+                    {
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Tx Test Failed To Receive Set Tx Power HCI Event");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        testresult = false;
+                    }
+                }
+
                 for (int channel = 37; channel <= 39; channel++)
                 {
+                    // initialize all flags everytime before sending a serious of HCI commands.
+                    initEvtReceivedFlags();
+
                     HCI_LE_Transmitter_Test[4] = (byte)channel;
                     HCI_LE_Receiver_Test[4] = (byte)channel;
 
@@ -405,23 +434,27 @@ namespace SerialPort
                     serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
                     serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
 
-                    // sleep for 1 sec to wait for all events.
-                    Thread.Sleep(1000);
-
-                    if (isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1 && isTxPowerEvtReceived == 1)
+                    // wait until all hci events are received.
+                    sw.Start();
+                    while (!(isDUTReceivedTxTestEvt == 1 && isREFReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1))
                     {
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF Received " + REFreceivedPacketsNum + " Packets");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-
-                        if (REFreceivedPacketsNum < 1500)
-                            testresult = false;
+                        // set 5s timeout. if expired, test fail.
+                        if (sw.ElapsedMilliseconds > 5000)
+                        {
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Tx Test Failed To Receive All HCI Event(s)");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            return false;
+                        }
                     }
-                    else
-                    {
+
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF Received " + REFreceivedPacketsNum + " Packets");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+
+                    if (REFreceivedPacketsNum < 1500)
                         testresult = false;
-                    }
                 }
             }
 
@@ -446,11 +479,32 @@ namespace SerialPort
             // set REF's Tx power - CC2540 support 4dBm, 0dBm, -6dBm, -23dBm.
             for (int txPowerIdx = 2; txPowerIdx >= 0; txPowerIdx--) 
             {
+                // initialize flag for setTxPower event.
+                initEvtReceivedFlags();
+
                 HCI_EXT_SetTxPower[4] = (byte)txPowerIdx;
                 serialPortSendHCICommand(HCI_EXT_SetTxPower, HCI_EXT_SetTxPower.Length, "HCI_EXT_SetTxPower", refPort);
 
+                // wait until all hci events are received.
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!(isTxPowerEvtReceived == 1))
+                {
+                    // set 5s timeout. if expired, test fail.
+                    if (sw.ElapsedMilliseconds > 5000)
+                    {
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Rx Test Failed To Receive Set Tx Power HCI Event");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        return false;
+                    }
+                }
+
                 for (int channel = 37; channel <= 39; channel++)
                 {
+                    // initialize all flags everytime before sending a serious of HCI commands.
+                    initEvtReceivedFlags();
+
                     HCI_LE_Transmitter_Test[4] = (byte)channel;
                     HCI_LE_Receiver_Test[4] = (byte)channel;
 
@@ -460,24 +514,28 @@ namespace SerialPort
                     Thread.Sleep(1000);
                     serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", refPort);
                     serialPortSendHCICommand(HCI_LE_Test_End, HCI_LE_Test_End.Length, "HCI_LE_Test_End", dutPort);
-
-                    // sleep for 2 sec to wait for all events.
-                    Thread.Sleep(1000);
-
-                    if (isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1 && isTxPowerEvtReceived == 1)
+                    
+                    // wait until all hci events are received.
+                    sw.Start();
+                    while (!(isREFReceivedTxTestEvt == 1 && isDUTReceivedRxTestEvt == 1 && isDUTReceivedTestEndEvt == 1 && isREFReceivedTestEndEvt == 1))
                     {
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT Received " + DUTreceivedPacketsNum + " Packets");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-
-                        if (DUTreceivedPacketsNum < 1500)
-                            testresult = false;
+                        // set 5s timeout. if expired, test fail.
+                        if (sw.ElapsedMilliseconds > 5000)
+                        {
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Rx Test Failed To Receive All HCI Event(s)");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            return false;
+                        }
                     }
-                    else
-                    {
+                    
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT Received " + DUTreceivedPacketsNum + " Packets");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+
+                    if (DUTreceivedPacketsNum < 1500)
                         testresult = false;
-                    }
                 }
             }
 
@@ -493,7 +551,6 @@ namespace SerialPort
             richTextBoxColor[1] = Color.Blue;
             richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test in progress...", 1 });
 
-            initEvtReceivedFlags();
             txTestResult = txTest();
 
             initEvtReceivedFlags();
@@ -518,7 +575,7 @@ namespace SerialPort
 
             // initialize all flags
             initEvtReceivedFlags();
-
+            
             try
             {
                 // Close comport here because worker could disconnect the devices. When test button is pressed next time, we will detect and connect again.
@@ -532,7 +589,7 @@ namespace SerialPort
             {
                 MessageBox.Show("Failed to close serial port.", "Error");
             }
-
+            
             startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
             startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
         }
