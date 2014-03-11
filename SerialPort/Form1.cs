@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Text.RegularExpressions;
 using System.Drawing;
+using System.IO;
 
 namespace SerialPort
 {
@@ -49,6 +50,7 @@ namespace SerialPort
             InitializeComponent();
             initAdvancedPanel();
             advancedPanel.Visible = false;
+            startTestButton.Enabled = false;
             showMsgToRichTextBox("Complete devices: " + completeDevice, 0);
         }
 
@@ -104,6 +106,8 @@ namespace SerialPort
                 richTextBox1.SelectionAlignment = richTextBoxAlignment[i];
                 richTextBox1.SelectionFont = new Font(richTextBox1.SelectedText, richTextBoxFontSize[i]);
             }
+
+            richTextBox1.DeselectAll();
         }
         
         private List<string> autoGetSerialPort()
@@ -177,15 +181,6 @@ namespace SerialPort
 
             // set default Serial Port configuration
             comboBoxBaudrate.Text = "115200";
-        }
-
-        public void StartProc(string exePath)
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = exePath;
-            startInfo.CreateNoWindow = true;
-            startInfo.WindowStyle = ProcessWindowStyle.Minimized;
-            Process.Start(startInfo);
         }
 
         // Event handler that will be called when Serial Port receving data. Will check sender to determine if DUT or REF send this event.
@@ -541,6 +536,64 @@ namespace SerialPort
             startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
             startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
         }
+        
+        private void burnThreadMain()
+        {
+            string executableName = "C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProgConsole.exe";
+            string hexPath = "C:\\Texas Instruments\\BLE-CC254x-1.4.0\\Accessories\\HexFiles\\CC2540_USBdongle_HostTestRelease_All.hex";
+            string executableParameter = "S EPV F=\"" + hexPath + "\"";
+
+            Process process = new Process();
+
+            try
+            {
+                ProcessStartInfo processStartInfo = new ProcessStartInfo(executableName, executableParameter);
+
+                processStartInfo.UseShellExecute = false;
+                processStartInfo.ErrorDialog = false;
+                //processStartInfo.CreateNoWindow = true;
+
+                processStartInfo.RedirectStandardError = true;
+                processStartInfo.RedirectStandardOutput = true;
+
+                process.StartInfo = processStartInfo;
+                bool processStarted = process.Start();
+
+
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Start burning image to DUT: " + hexPath);
+
+                StreamReader outputReader = process.StandardOutput;
+                StreamReader errorReader = process.StandardError;
+                process.WaitForExit();
+
+                string line;
+
+                while ((line = outputReader.ReadLine()) != null) 
+                {
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), line);
+                }
+
+                while ((line = errorReader.ReadLine()) != null)
+                {
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), line);
+                }
+
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Failed to execute SmartRFProgConsole.exe", "Error");
+            }
+
+            startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
+
+            if (process.ExitCode == 0)
+            {
+                // if success, enable test button.
+                startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
+            }
+        }
 
         // Start Test Button
         private void startTestButton_Click(object sender, EventArgs e)
@@ -566,17 +619,23 @@ namespace SerialPort
             {
                 richTextBoxColor[1] = Color.Red;
                 richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", 1 });
+
+                startTestButton.Enabled = true;
+                startBurnButton.Enabled = true;
                 return;
             }
 
-            System.Threading.Thread startButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(testThreadMain));
-            startButtonThread.Start();
+            System.Threading.Thread startTestButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(testThreadMain));
+            startTestButtonThread.Start();
         }
 
         private void startBurnButton_Click(object sender, EventArgs e)
         {
             startBurnButton.Enabled = false;
-            StartProc("C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\Flash Programmer\\bin\\SmartRFProg.exe");
+            startTestButton.Enabled = false;
+
+            System.Threading.Thread startBurnButtonThread = new System.Threading.Thread(new System.Threading.ThreadStart(burnThreadMain));
+            startBurnButtonThread.Start();
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
