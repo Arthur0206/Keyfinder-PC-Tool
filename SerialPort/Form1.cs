@@ -255,7 +255,7 @@ namespace SerialPort
                 }
                 catch(Exception)
                 {
-                    MessageBox.Show("Failed to write to serial port.", "Error");
+                    // MessageBox.Show("Failed to write to serial port.", "Error");
                 }
 
                 // convert hex array to string. ex. convert hex bytes array {0x01, 0x31, 0xf3, 0x01, 0x16} to string 01-31-fe-01-16
@@ -431,7 +431,7 @@ namespace SerialPort
                         txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                         txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Tx Test Failed To Receive Set Tx Power HCI Event");
                         txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
-                        testresult = false;
+                        return false;
                     }
                 }
 
@@ -602,7 +602,7 @@ namespace SerialPort
             }
             catch(Exception)
             {
-                MessageBox.Show("Failed to close serial port.", "Error");
+                // MessageBox.Show("Failed to close serial port.", "Error");
             }
             
             startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
@@ -678,8 +678,8 @@ namespace SerialPort
             }
             else if (process.ExitCode == 5)
             {
-                showMsgToRichTextBoxFromOtherThread("Cannot find hex file or DUT not connected to CC debugger!", 1, 12, Color.Red, HorizontalAlignment.Center);
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Cannot find hex file or DUT not connected to CC debugger!");
+                showMsgToRichTextBoxFromOtherThread("Cannot find hex file, or CC debugger is not connected to DUT properly!", 1, 12, Color.Red, HorizontalAlignment.Center);
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Cannot find hex file, or CC debugger is not connected to DUT properly!");
             }
 
             txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
