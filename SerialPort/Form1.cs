@@ -51,7 +51,7 @@ namespace SerialPort
             initAdvancedPanel();
             advancedPanel.Visible = false;
             startTestButton.Enabled = false;
-            showMsgToRichTextBox("Complete devices: " + completeDevice, 0);
+            showMsgToRichTextBoxFromUIThread("Complete devices: " + completeDevice, 0, 12, Color.Black, HorizontalAlignment.Center);
         }
 
         private void initEvtReceivedFlags()
@@ -82,7 +82,23 @@ namespace SerialPort
             this.txtReceive.AppendText(text + Environment.NewLine + Environment.NewLine);
         }
 
-        private void showMsgToRichTextBox(String text, int line)
+        private void showMsgToRichTextBoxFromOtherThread(String text, int line, int size, Color color, HorizontalAlignment align)
+        {
+            richTextBoxFontSize[line] = size;
+            richTextBoxColor[line] = color;
+            richTextBoxAlignment[line] = align;
+            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBoxHelperFunction), new object[] { text, line });
+        }
+
+        private void showMsgToRichTextBoxFromUIThread(String text, int line, int size, Color color, HorizontalAlignment align)
+        {
+            richTextBoxFontSize[line] = size;
+            richTextBoxColor[line] = color;
+            richTextBoxAlignment[line] = align;
+            showMsgToRichTextBoxHelperFunction(text, line);
+        }
+
+        private void showMsgToRichTextBoxHelperFunction(String text, int line)
         {
             richTextBox1.DeselectAll();
 
@@ -412,9 +428,9 @@ namespace SerialPort
                     // set 5s timeout. if expired, test fail.
                     if (sw.ElapsedMilliseconds > 5000)
                     {
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                         txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Tx Test Failed To Receive Set Tx Power HCI Event");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                         testresult = false;
                     }
                 }
@@ -441,17 +457,17 @@ namespace SerialPort
                         // set 5s timeout. if expired, test fail.
                         if (sw.ElapsedMilliseconds > 5000)
                         {
-                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                             txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Tx Test Failed To Receive All HCI Event(s)");
-                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                             return false;
                         }
                     }
 
-                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                     txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
                     txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF Received " + REFreceivedPacketsNum + " Packets");
-                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
 
                     if (REFreceivedPacketsNum < 1500)
                         testresult = false;
@@ -493,9 +509,9 @@ namespace SerialPort
                     // set 5s timeout. if expired, test fail.
                     if (sw.ElapsedMilliseconds > 5000)
                     {
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                         txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Rx Test Failed To Receive Set Tx Power HCI Event");
-                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                        txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                         return false;
                     }
                 }
@@ -522,17 +538,17 @@ namespace SerialPort
                         // set 5s timeout. if expired, test fail.
                         if (sw.ElapsedMilliseconds > 5000)
                         {
-                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                             txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Rx Test Failed To Receive All HCI Event(s)");
-                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                             return false;
                         }
                     }
-                    
-                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
                     txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "REF's Tx Power Index = " + txPowerIdx + ", channel = " + channel);
                     txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "DUT Received " + DUTreceivedPacketsNum + " Packets");
-                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
+                    txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
 
                     if (DUTreceivedPacketsNum < 1500)
                         testresult = false;
@@ -548,8 +564,7 @@ namespace SerialPort
             bool txTestResult;
             bool rxTestResult;
 
-            richTextBoxColor[1] = Color.Blue;
-            richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test in progress...", 1 });
+            showMsgToRichTextBoxFromOtherThread("Test in progress...", 1, 20, Color.Blue, HorizontalAlignment.Center);
 
             txTestResult = txTest();
 
@@ -560,17 +575,17 @@ namespace SerialPort
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Passed!");
                 richTextBoxColor[1] = Color.Green;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Passed!", 1 });
+                showMsgToRichTextBoxFromOtherThread("Test Passed!", 1, 20, Color.Green, HorizontalAlignment.Center);
                 completeDevice++;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Complete devices: " + completeDevice, 0 });
+                showMsgToRichTextBoxFromOtherThread("Complete devices: " + completeDevice, 0, 12, Color.Black, HorizontalAlignment.Center);
             }
             else
             {
                 txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Test Failed!");
                 richTextBoxColor[1] = Color.Red;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Test Failed!", 1 });
+                showMsgToRichTextBoxFromOtherThread("Test Failed!", 1, 20, Color.Red, HorizontalAlignment.Center);
                 completeDevice++;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Complete devices: " + completeDevice, 0 });
+                showMsgToRichTextBoxFromOtherThread("Complete devices: " + completeDevice, 0, 12, Color.Black, HorizontalAlignment.Center);
             }
 
             // initialize all flags
@@ -600,6 +615,11 @@ namespace SerialPort
             string hexPath = "C:\\Texas Instruments\\BLE-CC254x-1.4.0\\Accessories\\HexFiles\\CC2540_USBdongle_HostTestRelease_All.hex";
             string executableParameter = "S EPV F=\"" + hexPath + "\"";
 
+            showMsgToRichTextBoxFromOtherThread("Burning...", 1, 20, Color.Blue, HorizontalAlignment.Center);
+
+            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
+            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Start burning image to DUT: " + hexPath);
+
             Process process = new Process();
 
             try
@@ -608,17 +628,13 @@ namespace SerialPort
 
                 processStartInfo.UseShellExecute = false;
                 processStartInfo.ErrorDialog = false;
-                //processStartInfo.CreateNoWindow = true;
+                processStartInfo.CreateNoWindow = true;
 
                 processStartInfo.RedirectStandardError = true;
                 processStartInfo.RedirectStandardOutput = true;
 
                 process.StartInfo = processStartInfo;
                 bool processStarted = process.Start();
-
-
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Start burning image to DUT: " + hexPath);
 
                 StreamReader outputReader = process.StandardOutput;
                 StreamReader errorReader = process.StandardError;
@@ -635,21 +651,40 @@ namespace SerialPort
                 {
                     txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), line);
                 }
-
-                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "===================================================");
             }
             catch (Exception)
             {
+                showMsgToRichTextBoxFromOtherThread("Cannot execute SF programmer!", 1, 20, Color.Red, HorizontalAlignment.Center);
                 MessageBox.Show("Failed to execute SmartRFProgConsole.exe", "Error");
             }
-
-            startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
 
             if (process.ExitCode == 0)
             {
                 // if success, enable test button.
                 startTestButton.BeginInvoke(new SetButtonCallback(setTestButtonEnabled), true);
+
+                showMsgToRichTextBoxFromOtherThread("Burned Success!", 1, 20, Color.Green, HorizontalAlignment.Center);
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Burned Success!");
             }
+            else if (process.ExitCode == 1)
+            {
+                showMsgToRichTextBoxFromOtherThread("System Error!", 1, 20, Color.Red, HorizontalAlignment.Center);
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "System Error!");
+            }
+            else if (process.ExitCode == 2 || process.ExitCode == 3 || process.ExitCode == 4)
+            {
+                showMsgToRichTextBoxFromOtherThread("CC Debugger not connected to PC!", 1, 14, Color.Red, HorizontalAlignment.Center);
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "CC Debugger not connected to PC!");
+            }
+            else if (process.ExitCode == 5)
+            {
+                showMsgToRichTextBoxFromOtherThread("Cannot find hex file or DUT not connected to CC debugger!", 1, 12, Color.Red, HorizontalAlignment.Center);
+                txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "Cannot find hex file or DUT not connected to CC debugger!");
+            }
+
+            txtReceive.BeginInvoke(new SetTextCallback(showMsgToTextBox), "================================================================");
+
+            startTestButton.BeginInvoke(new SetButtonCallback(setBurnButtonEnabled), true);
         }
 
         // Start Test Button
@@ -674,8 +709,7 @@ namespace SerialPort
 
             if (!dutDetected || !refDetected)
             {
-                richTextBoxColor[1] = Color.Red;
-                richTextBox1.BeginInvoke(new SetRichTextCallback(showMsgToRichTextBox), new object[] { "Cannot connect to devices!", 1 });
+                showMsgToRichTextBoxFromOtherThread("Cannot connect to devices!", 1, 20, Color.Red, HorizontalAlignment.Center);
 
                 startTestButton.Enabled = true;
                 startBurnButton.Enabled = true;

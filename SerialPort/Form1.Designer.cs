@@ -142,7 +142,7 @@
             this.txtReceive.Name = "txtReceive";
             this.txtReceive.ReadOnly = true;
             this.txtReceive.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtReceive.Size = new System.Drawing.Size(484, 235);
+            this.txtReceive.Size = new System.Drawing.Size(484, 345);
             this.txtReceive.TabIndex = 20;
             // 
             // startTestButton
@@ -230,7 +230,7 @@
             this.advancedGroupBox.Location = new System.Drawing.Point(14, 10);
             this.advancedGroupBox.Margin = new System.Windows.Forms.Padding(10);
             this.advancedGroupBox.Name = "advancedGroupBox";
-            this.advancedGroupBox.Size = new System.Drawing.Size(512, 370);
+            this.advancedGroupBox.Size = new System.Drawing.Size(512, 479);
             this.advancedGroupBox.TabIndex = 27;
             this.advancedGroupBox.TabStop = false;
             this.advancedGroupBox.Text = "Advanced Panel";
@@ -264,7 +264,7 @@
             this.advancedPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.advancedPanel.Location = new System.Drawing.Point(0, 356);
             this.advancedPanel.Name = "advancedPanel";
-            this.advancedPanel.Size = new System.Drawing.Size(540, 394);
+            this.advancedPanel.Size = new System.Drawing.Size(540, 499);
             this.advancedPanel.TabIndex = 29;
             // 
             // generalPanel
@@ -293,7 +293,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(540, 765);
+            this.ClientSize = new System.Drawing.Size(540, 855);
             this.Controls.Add(this.advancedPanel);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.generalPanel);
